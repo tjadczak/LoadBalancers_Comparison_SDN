@@ -15,12 +15,13 @@ import datetime
 
 """ 
     TOPOLOGY:
-                          * --- s2 --- *
-                          |            |
-            h1 --- s1 --- * --- s3 --- * --- s5 --- h5
-                          |            |  
-                          * --- s4 --- *
+            h1 --- *       * --- h11
+                   |       |
+            h2 --- s1 --- h5 --- h12
+                   |       |  
+            h3 --- *       * --- h13
 """
+
 
 class SimpleLoadBalancer(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -28,10 +29,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
         self.datapaths = {}
-        self.previous_byte_count_sum = [0, 0, 0, 0, 0, 0] #tu zapamietana wartosc przeslanych byteow w poprzedniej sekundzie
-        self.current_load = [0, 0, 0, 0, 0, 0] #tu obecny load na danym switchu w Mbps
+        self.previous_byte_count_sum = [0, 0, 0, 0, 0, 0]  # tu zapamietana wartosc przeslanych byteow w poprzedniej sekundzie
+        self.current_load = [0, 0, 0, 0, 0, 0]  # tu obecny load na danym switchu w Mbps
         self.monitor_thread = hub.spawn(self._monitor)
-        self.time_interval = 2 # co ile sekund zbierane statystyki ze switchy
+        self.time_interval = 1  # co ile sekund zbierane statystyki ze switchy
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
