@@ -139,10 +139,33 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         eth_pkt = pkt.get_protocol(ethernet.ethernet)
         dst = eth_pkt.dst
         src = eth_pkt.src
+
         # get the received port number from packet_in message.
         in_port = msg.match['in_port']
         self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
+
         # if the destination mac address is already learned,
         # decide which port to output the packet, otherwise FLOOD.
+        if dst in self.mac_to_port[dpid]:
+            out_port = self.mac_to_port[dpid][dst]
+        else:
+            out_port = ofproto.OFPP_FLOOD
+
+        # construct action list.
+        actions = [parser.OFPActionOutput(out_port)]
+
+        # install a flow to avoid packet_in next time.
+        if out_port != ofproto.OFPP_FLOOD:
+            match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
+            self.add_flow(datapath, 1, match, actions)
+
+        # construct packet_out message and send it.
+        out = parser.OFPPacketOut(datapath=datapath,
+                                  buffer_id=ofproto.OFP_NO_BUFFER,
+                                  in_port=in_port,
+                                  actions=actions,
+                                  data=msg.data)
+        datapath.send_msg(out)
