@@ -2,6 +2,7 @@ from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
+from ryu.lib.packet.packet import Packet
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
@@ -218,13 +219,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # choose the target/source MAC address from one of the servers;
         # else the target MAC address is set to the one corresponding
         # to the target host's IP.
-        if dstIp != self.H5_ip and dstIp != self.H6_ip:
-            if self.next_server == self.H5_ip:
-                srcMac = self.H5_mac
-                self.next_server = self.H6_ip
+        if dstIp != self.H11_ip and dstIp != self.H12_ip:
+            if self.next_server == self.H11_ip:
+                srcMac = self.H11_mac
+                self.next_server = self.H12_ip
             else:
-                srcMac = self.H6_mac
-                self.next_server = self.H5_ip
+                srcMac = self.H12_mac
+                self.next_server = self.H11_ip
         else:
             srcMac = self.ip_to_mac[srcIp]
 
@@ -252,7 +253,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         srcIp = packet.get_protocol(arp.arp).src_ip
 
         # Don't push forwarding rules if an ARP request is received from a server.
-        if srcIp == self.H5_ip or srcIp == self.H6_ip:
+        if srcIp == self.H11_ip or srcIp == self.H12_ip:
             return
 
         # Generate flow from host to server.
