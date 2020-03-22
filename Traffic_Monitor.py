@@ -15,11 +15,11 @@ import datetime
 
 """ 
     TOPOLOGY:
-            h1 --- *       * --- h11
-                   |       |
-            h2 --- s1 --- h5 --- h12
-                   |       |  
-            h3 --- *       * --- h13
+            h1 --- *            * --- h11
+                   |            |
+            h2 --- * --- s1 --- * --- h12
+                   |            |  
+            h3 --- *            * --- h13
 """
 
 
@@ -75,7 +75,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             stat.byte_count pokazuje ilosc bajtow przeslanych sumarycznie dla danego flowa
             wiec trzea odjac od poprzedniej probki obecna zeby policzyc przeslane w ciagu sekundy"""
             transmited_data += stat.byte_count
-
 
         self.current_load[ev.msg.datapath.id] = (transmited_data - self.previous_byte_count_sum[ev.msg.datapath.id])*8.0/1000000/self.time_interval 
         self.previous_byte_count_sum[ev.msg.datapath.id] = transmited_data 
@@ -153,7 +152,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         self.logger.debug("packet in %s %s %s %s", dpid, src, dst, in_port)
 
-        if (dpid == 1 and in_port == 1): #jesli switch 1 i przyszlo z portu 1(od h1)
+        if dpid == 1 and in_port == 1: #jesli switch 1 i przyszlo z portu 1(od h1)
             if self.current_load[2] <= self.current_load[3]:
                 if self.current_load[2] <= self.current_load[4]:
                     out_port = 2
@@ -167,21 +166,21 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         elif dpid == 1: #jesli switch 1 i przyszlo z innego portu(ktorys z 3 switchy) to leci do h1
             out_port = 1
 
-        elif (dpid == 2 and in_port == 1):
+        elif dpid == 2 and in_port == 1:
             out_port = 2
-        elif (dpid == 3 and in_port == 1):
+        elif dpid == 3 and in_port == 1:
             out_port = 2
-        elif (dpid == 4 and in_port == 1):
+        elif dpid == 4 and in_port == 1:
             out_port = 2
 
-        elif (dpid == 2 and in_port == 2):
+        elif dpid == 2 and in_port == 2:
             out_port = 1
-        elif (dpid == 3 and in_port == 2):
+        elif dpid == 3 and in_port == 2:
             out_port = 1
-        elif (dpid == 4 and in_port == 2):
+        elif dpid == 4 and in_port == 2:
             out_port = 1
 
-        elif (dpid == 5 and in_port == 4): #jesli switch 5 i przyszlo z portu 4(od h5)
+        elif dpid == 5 and in_port == 4:  # jesli switch 5 i przyszlo z portu 4(od h5)
             if self.current_load[2] <= self.current_load[3]:
                 if self.current_load[2] <= self.current_load[4]:
                     out_port = 1
@@ -192,7 +191,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     out_port = 2
                 else:
                     out_port = 3
-        elif dpid == 5: #jesli switch 5 i przyszlo z innego portu(ktorys z 3 switchy) to leci do h5
+        elif dpid == 5:  # jesli switch 5 i przyszlo z innego portu(ktorys z 3 switchy) to leci do h5
             out_port = 4
 
         actions = [parser.OFPActionOutput(out_port)]
@@ -215,7 +214,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 self.logger.info("Install ICMP flow, Datapath : %4x, out port : %4d, icmp_code : %6d, icmp_type : %6d", dpid, out_port, icmp_code, icmp_type)
             match = parser.OFPMatch(in_port=in_port, eth_dst=dst, eth_src=src, eth_type=eth_type, ip_proto=ip_proto, icmpv4_code=icmp_code, icmpv4_type=icmp_type)
         else:
-            #if out_port == 2 or out_port == 3 or out_port == 4:
+            # if out_port == 2 or out_port == 3 or out_port == 4:
             self.logger.info("Not ARP not TCP/UDP not ICMP")
             self.logger.info("Not installing unknown flow")
             return
