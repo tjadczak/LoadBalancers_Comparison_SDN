@@ -10,18 +10,18 @@ class MyTopo(Topo):
         host_1 = self.addHost('h1')
         host_2 = self.addHost('h2')
         host_3 = self.addHost('h3')
-        server_11 = self.addHost('h11')
-        server_12 = self.addHost('h12')
-        server_13 = self.addHost('h13')
+        server_1 = self.addHost('h4')
+        server_2 = self.addHost('h5')
+        server_3 = self.addHost('h6')
         switch = self.addSwitch('s1')
 
         # Add Links
         self.addLink(switch, host_1, bw=10)
         self.addLink(switch, host_2, bw=10)
         self.addLink(switch, host_3, bw=10)
-        self.addLink(switch, server_11, bw=10)
-        self.addLink(switch, server_12, bw=10)
-        self.addLink(switch, server_13, bw=10)
+        self.addLink(switch, server_1, bw=10)
+        self.addLink(switch, server_2, bw=10)
+        self.addLink(switch, server_3, bw=10)
 
 
 topos = {'mytopo': (lambda: MyTopo())}
