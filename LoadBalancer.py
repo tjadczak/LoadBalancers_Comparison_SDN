@@ -28,13 +28,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     virtual_ip = "10.0.0.10"  # The virtual server IP
     # Hosts 5 and 6 are servers.
-    H11_mac = "00:00:00:00:00:04"  # Host 5's mac
-    H11_ip = "10.0.0.4"  # Host 5's IP
-    H12_mac = "00:00:00:00:00:05"  # Host 6's mac
-    H12_ip = "10.0.0.5"  # Host 6's IP
+    H5_mac = "00:00:00:00:00:05"          # Host 5's mac
+    H5_ip = "10.0.0.5"                    # Host 5's IP
+    H6_mac = "00:00:00:00:00:06"          # Host 6's mac
+    H6_ip = "10.0.0.6"                    # Host 6's IP
     next_server = ""  # Stores the IP of the  next server to use in round robin manner
     current_server = ""  # Stores the current server's IP
-    ip_to_port = {H11_ip: 4, H12_ip: 5}
+    ip_to_port = {H5_ip: 5, H6_ip: 6}
     ip_to_mac = {"10.0.0.1": "00:00:00:00:00:01",
                  "10.0.0.2": "00:00:00:00:00:02",
                  "10.0.0.3": "00:00:00:00:00:03"}
@@ -45,8 +45,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.monitor_thread = hub.spawn(self._monitor)
         self.time_interval = 1
         self.mac_to_port = {}
-        self.next_server = self.H11_ip
-        self.current_server = self.H11_ip
+        self.next_server = self.H5_ip
+        self.current_server = self.H5_ip
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
@@ -219,13 +219,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # choose the target/source MAC address from one of the servers;
         # else the target MAC address is set to the one corresponding
         # to the target host's IP.
-        if dstIp != self.H11_ip and dstIp != self.H12_ip:
-            if self.next_server == self.H11_ip:
-                srcMac = self.H11_mac
-                self.next_server = self.H12_ip
+        if dstIp != self.H5_ip and dstIp != self.H6_ip:
+            if self.next_server == self.H5_ip:
+                srcMac = self.H5_mac
+                self.next_server = self.H6_ip
             else:
-                srcMac = self.H12_mac
-                self.next_server = self.H11_ip
+                srcMac = self.H6_mac
+                self.next_server = self.H5_ip
         else:
             srcMac = self.ip_to_mac[srcIp]
 
@@ -253,7 +253,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         srcIp = packet.get_protocol(arp.arp).src_ip
 
         # Don't push forwarding rules if an ARP request is received from a server.
-        if srcIp == self.H11_ip or srcIp == self.H12_ip:
+        if srcIp == self.H5_ip or srcIp == self.H6_ip:
             return
 
         # Generate flow from host to server.
