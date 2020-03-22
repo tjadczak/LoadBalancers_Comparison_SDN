@@ -83,14 +83,14 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
         body = ev.msg.body
-        self.logger.info('        datapath ' ' in-port           eth-dst ' ' tcp_src  tcp_dst ' 'out-port  packets    bytes')
-        self.logger.info('---------------- ' '-------- ----------------- ' '-------- -------- ' '-------- -------- --------')
+        self.logger.info('        datapath ' ' in-port           eth-dst ' 'out-port  packets    bytes')
+        self.logger.info('---------------- ' '-------- ----------------- ' '-------- -------- --------')
         for stat in sorted([flow for flow in body if flow.priority == 1],
                            key=lambda flow: (flow.match['in_port'],
                                              flow.match['eth_dst'])):
             self.logger.info('%016x %8x %17s %8x %8d %8d',
                              ev.msg.datapath.id,
-                             stat.match['in_port'], stat.match['eth_dst'], stat.match['tcp_src'], stat.match['tcp_dst'],
+                             stat.match['in_port'], stat.match['eth_dst'],
                              stat.instructions[0].actions[0].port,
                              stat.packet_count, stat.byte_count)
 
