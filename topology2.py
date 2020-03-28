@@ -37,7 +37,7 @@ class MyTopo(Topo):
 
 def main():
     setLogLevel('info')
-    topo = MyTopo()
+    topo = {'mytopo': (lambda: MyTopo())}
     net = Mininet(topo=topo,
                   controller=None,
                   autoStaticArp=True)
