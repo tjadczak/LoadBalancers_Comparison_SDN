@@ -266,7 +266,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         mod = ofp_parser.OFPFlowMod(
             datapath=datapath,
             priority=1,
-            buffer_id=ofp.OFP_NO_BUFFER,
             match=match,
             instructions=inst)
 
@@ -283,8 +282,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         mod = ofp_parser.OFPFlowMod(
             datapath=datapath,
-            priority=0,
-            buffer_id=ofp.OFP_NO_BUFFER,
+            priority=1,
             match=match,
             instructions=inst)
 
