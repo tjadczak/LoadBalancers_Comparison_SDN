@@ -1,4 +1,15 @@
+#!/usr/bin/python
+
 from mininet.topo import Topo
+
+from mininet.cli import CLI
+from mininet.net import Mininet
+from mininet.log import setLogLevel
+from mininet.topo import Topo
+from mininet.node import RemoteController
+
+
+REMOTE_CONTROLLER_IP = "127.0.0.1"
 
 
 class MyTopo(Topo):
@@ -23,8 +34,22 @@ class MyTopo(Topo):
         self.addLink(switch, server_1, bw=10)
         self.addLink(switch, server_2, bw=10)
 
-        # server_1.sendCmd("python -m SimpleHTTPServer 80 >& /tmp/http.log &")
-        # server_2.sendCmd("python -m SimpleHTTPServer 80 >& /tmp/http.log &")
+
+def main():
+    setLogLevel('info')
+    topo = MyTopo()
+    net = Mininet(topo=topo,
+                  controller=None,
+                  autoStaticArp=True)
+    net.addController("c0",
+                      controller=RemoteController,
+                      ip=REMOTE_CONTROLLER_IP,
+                      port=6633)
+    net.start()
+    CLI(net)
+    net.stop()
 
 
-topos = {'mytopo': (lambda: MyTopo())}
+if __name__ == '__main__':
+    main()
+
