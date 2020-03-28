@@ -41,7 +41,6 @@ def main():
     topo = MyTopo()
     net = Mininet(topo=topo,
                   controller=None,
-                  autoStaticArp=True,
                   link=TCLink)
     net.addController("c0",
                       controller=RemoteController,
