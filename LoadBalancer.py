@@ -65,8 +65,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             self.logger.info("---------------------------------------------------")
             self.logger.info(datetime.datetime.now().strftime("%H:%M:%S"))
             self.logger.info("---------------------------------------------------")
-            for dp in self.datapaths.values():
-                self._request_stats(dp)
+            #for dp in self.datapaths.values():
+            #    self._request_stats(dp)
             hub.sleep(self.time_interval)
 
     def _request_stats(self, datapath):
@@ -196,6 +196,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         pkt = packet.Packet(msg.data)
         etherFrame = pkt.get_protocol(ethernet.ethernet)
+        self.logger.info('Packet In', pkt, etherFrame)
 
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
