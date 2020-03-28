@@ -7,6 +7,7 @@ from mininet.net import Mininet
 from mininet.log import setLogLevel
 from mininet.topo import Topo
 from mininet.node import RemoteController
+from mininet.link import TCLink
 
 
 REMOTE_CONTROLLER_IP = "127.0.0.1"
@@ -37,10 +38,11 @@ class MyTopo(Topo):
 
 def main():
     setLogLevel('info')
-    topo = {'mytopo': (lambda: MyTopo())}
+    topo = MyTopo()
     net = Mininet(topo=topo,
                   controller=None,
-                  autoStaticArp=True)
+                  autoStaticArp=True,
+                  link=TCLink)
     net.addController("c0",
                       controller=RemoteController,
                       ip=REMOTE_CONTROLLER_IP,
