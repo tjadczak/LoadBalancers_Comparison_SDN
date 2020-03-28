@@ -121,7 +121,14 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         match = parser.OFPMatch()
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
-        self.add_flow_feature(datapath, 0, match, actions)
+
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+
+        mod = parser.OFPFlowMod(datapath=datapath, priority=0,
+                                match=match, instructions=inst)
+        datapath.send_msg(mod)
+
+        # self.add_flow_feature(datapath, 0, match, actions)
 
     def add_flow_feature(self, datapath, priority, match, actions):
         ofproto = datapath.ofproto
