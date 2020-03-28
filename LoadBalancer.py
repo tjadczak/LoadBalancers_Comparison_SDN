@@ -16,11 +16,13 @@ import datetime
 
 """ 
     TOPOLOGY:
-            h1 --- *            * --- h11
+            h1 --- *            * --- h5 (server)
                    |            |
-            h2 --- * --- s1 --- * --- h12
-                   |            |  
-            h3 --- *            * --- h13
+            h2 --- * --- s1 --- * --- h6 (server)
+                   |              
+            h3 --- *            
+                   |
+            h4 --- *
 """
 
 
@@ -37,7 +39,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     ip_to_port = {H5_ip: 5, H6_ip: 6}
     ip_to_mac = {"10.0.0.1": "00:00:00:00:00:01",
                  "10.0.0.2": "00:00:00:00:00:02",
-                 "10.0.0.3": "00:00:00:00:00:03"}
+                 "10.0.0.3": "00:00:00:00:00:03",
+                 "10.0.0.4": "00:00:00:00:00:04"}
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
@@ -62,11 +65,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
     def _monitor(self):
         while True:
-            self.logger.info("---------------------------------------------------")
+            '''self.logger.info("---------------------------------------------------")
             self.logger.info(datetime.datetime.now().strftime("%H:%M:%S"))
             self.logger.info("---------------------------------------------------")
-            #for dp in self.datapaths.values():
-            #    self._request_stats(dp)
+            for dp in self.datapaths.values():
+                self._request_stats(dp)'''
             hub.sleep(self.time_interval)
 
     def _request_stats(self, datapath):
@@ -196,7 +199,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         pkt = packet.Packet(msg.data)
         etherFrame = pkt.get_protocol(ethernet.ethernet)
-        self.logger.info('Packet In', pkt, etherFrame)
+        self.logger.info('Packet In', etherFrame.ethertype, ether_types.ETH_TYPE_ARP)
 
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
