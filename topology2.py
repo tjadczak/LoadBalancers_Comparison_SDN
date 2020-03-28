@@ -8,10 +8,11 @@ from mininet.link import TCLink
 
 REMOTE_CONTROLLER_IP = "127.0.0.1"
 
+
 def main():
     setLogLevel('info')
 
-    net = Mininet(controller=RemoteController, link=TCLink)
+    net = Mininet(controller=None, link=TCLink, autoSetMacs=True)
     net.addController("c0", controller=RemoteController,
                       ip=REMOTE_CONTROLLER_IP, port=6633)
     s1 = net.addSwitch('s1')
