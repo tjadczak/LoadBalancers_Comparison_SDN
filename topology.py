@@ -23,5 +23,8 @@ class MyTopo(Topo):
         self.addLink(switch, server_1, bw=10)
         self.addLink(switch, server_2, bw=10)
 
+        server_1.sendCmd("python -m SimpleHTTPServer 80 >& /tmp/http.log &")
+        server_2.sendCmd("python -m SimpleHTTPServer 80 >& /tmp/http.log &")
+
 
 topos = {'mytopo': (lambda: MyTopo())}
