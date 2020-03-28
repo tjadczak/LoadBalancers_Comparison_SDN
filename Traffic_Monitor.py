@@ -44,6 +44,8 @@ class LoadBalancer(app_manager.RyuApp):
         pkt = packet.Packet(msg.data)
         etherFrame = pkt.get_protocol(ethernet.ethernet)
 
+        self.logger.info('Packet In', pkt, etherFrame)
+
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
         if etherFrame.ethertype == ether_types.ETH_TYPE_ARP:
