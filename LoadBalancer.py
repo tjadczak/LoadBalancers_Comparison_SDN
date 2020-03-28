@@ -121,9 +121,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         match = parser.OFPMatch()
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
-        self.add_flow_feature(datapath, 0, match, actions)
+        self.add_flow(datapath, 0, match, actions)
 
-    def add_flow_feature(self, datapath, priority, match, actions):
+    def add_flow(self, datapath, priority, match, actions):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
@@ -133,7 +133,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                 match=match, instructions=inst)
         datapath.send_msg(mod)
 
-    '''@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         if ev.msg.msg_len < ev.msg.total_len:
             self.logger.error("packet truncated: only %s of %s bytes",
@@ -183,9 +183,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                   in_port=in_port,
                                   actions=actions,
                                   data=msg.data)
-        datapath.send_msg(out)'''
+        datapath.send_msg(out)
 
-    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    '''@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         msg = ev.msg
         dp = msg.datapath
@@ -248,9 +248,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             data=p.data
         )
         datapath.send_msg(out)  # Send out ARP reply
+        '''
 
     # Sets up the flow table in the switch to map IP addresses correctly.
-    def add_flow(self, datapath, packet, ofp_parser, ofp, in_port):
+    '''def add_flow(self, datapath, packet, ofp_parser, ofp, in_port):
         srcIp = packet.get_protocol(arp.arp).src_ip
 
         # Don't push forwarding rules if an ARP request is received from a server.
@@ -290,4 +291,4 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             match=match,
             instructions=inst)
 
-        datapath.send_msg(mod)
+        datapath.send_msg(mod)'''
