@@ -65,11 +65,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
     def _monitor(self):
         while True:
-            '''self.logger.info("---------------------------------------------------")
+            self.logger.info("---------------------------------------------------")
             self.logger.info(datetime.datetime.now().strftime("%H:%M:%S"))
             self.logger.info("---------------------------------------------------")
             for dp in self.datapaths.values():
-                self._request_stats(dp)'''
+                self._request_stats(dp)
             hub.sleep(self.time_interval)
 
     def _request_stats(self, datapath):
@@ -128,17 +128,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                 match=match, instructions=inst)
         datapath.send_msg(mod)
 
-        # self.add_flow_feature(datapath, 0, match, actions)
-
-    def add_flow_feature(self, datapath, priority, match, actions):
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-
-        mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
-                                match=match, instructions=inst)
-        datapath.send_msg(mod)
 
     '''@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
