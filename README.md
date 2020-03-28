@@ -1,4 +1,4 @@
 # LoadBalancers_Comparison_SDN
 ## Magisterka
-#### sudo mn --custom topology.py --topo mytopo --mac --controller remote --switch ovsk --link=tc
+#### sudo ./topology.py
 #### sudo ryu-manager Traffic_Monitor.py
