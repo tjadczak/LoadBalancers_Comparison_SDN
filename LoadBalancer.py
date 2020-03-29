@@ -244,7 +244,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     # Sets up the flow table in the switch to map IP addresses correctly.
     def add_flow(self, datapath, packet, ofp_parser, ofp, in_port):
         srcIp = packet.get_protocol(arp.arp).src_ip
-
+        srcTcp = packet.get_protocol(tcp.tcp).src_port
+        print(srcTcp)
         # Don't push forwarding rules if an ARP request is received from a server.
         if srcIp == self.H5_ip or srcIp == self.H6_ip:
             return
@@ -252,7 +253,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # Generate flow from host to server.
         match = ofp_parser.OFPMatch(in_port=in_port,
                                     ipv4_dst=self.virtual_ip,
-                                    eth_type=0x0800)
+                                    eth_type=0x0800,
+                                    ip_proto=0x06,
+                                    tcp_src=srcTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
                    ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
         inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
@@ -269,7 +272,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         match = ofp_parser.OFPMatch(in_port=self.ip_to_port[self.current_server],
                                     ipv4_src=self.current_server,
                                     ipv4_dst=srcIp,
-                                    eth_type=0x0800)
+                                    eth_type=0x0800,
+                                    ip_proto=0x06,
+                                    tcp_dst=srcTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                    ofp_parser.OFPActionOutput(in_port)]
         inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
