@@ -33,8 +33,8 @@ def main():
     net.addLink(switch, server_2, bw=10)
 
     net.start()
-    server_1.sendCmd("python -m SimpleHTTPServer 80 >& /tmp/http.log &")
-    server_2.sendCmd("python -m SimpleHTTPServer 80 >& /tmp/http.log &")
+    server_1.sendCmd("python -m SimpleHTTPServer 80 >& ./http_1.log &")
+    server_2.sendCmd("python -m SimpleHTTPServer 80 >& ./http_2.log &")
     CLI(net)
     net.stop()
 
