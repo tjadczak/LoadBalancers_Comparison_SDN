@@ -40,7 +40,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     ip_to_mac = {"10.0.0.1": "00:00:00:00:00:01",
                  "10.0.0.2": "00:00:00:00:00:02",
                  "10.0.0.3": "00:00:00:00:00:03",
-                 "10.0.0.4": "00:00:00:00:00:04"}
+                 "10.0.0.4": "00:00:00:00:00:04",
+                 "10.0.0.5": "00:00:00:00:00:05",
+                 "10.0.0.6": "00:00:00:00:00:06"}
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
@@ -297,6 +299,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                     tcp_src=srcTcp)'''
         match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ip_proto=ipProto, tcp_src=srcTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
+                   ofp_parser.OFPActionSetField(arp_tha=self.ip_to_mac[self.current_server]),
                    ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
         inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
 
