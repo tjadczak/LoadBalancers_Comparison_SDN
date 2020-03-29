@@ -243,14 +243,26 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         )
         datapath.send_msg(out)  # Send out ARP reply
 
-    def create_match(self, ofp_parser, in_port, ipv4_dst, eth_type, ipv4_src, ip_proto, tcp_src, tcp_dest):
-        match = ofp_parser.OFPMatch(in_port=in_port,
-                                    ipv4_dst=ipv4_dst,
-                                    ipv4_src=ipv4_src,
-                                    eth_type=eth_type,
-                                    ip_proto=ip_proto,
-                                    tcp_src=tcp_src,
-                                    tcp_dst=tcp_dest)
+    def create_match(self, ofp_parser, in_port, ipv4_dst, eth_type,
+                     ipv4_src=None, ip_proto=None, tcp_src=None, tcp_dst=None):
+        if tcp_src:
+            match = ofp_parser.OFPMatch(in_port=in_port,
+                                        ipv4_dst=ipv4_dst,
+                                        eth_type=eth_type,
+                                        ip_proto=ip_proto,
+                                        tcp_src=tcp_src)
+        elif tcp_dst:
+            match = ofp_parser.OFPMatch(in_port=in_port,
+                                        ipv4_dst=ipv4_dst,
+                                        ipv4_src=ipv4_src,
+                                        eth_type=eth_type,
+                                        ip_proto=ip_proto,
+                                        tcp_dst=tcp_dst)
+        else:
+            match = ofp_parser.OFPMatch(in_port=in_port,
+                                        ipv4_dst=ipv4_dst,
+                                        ipv4_src=ipv4_src,
+                                        eth_type=eth_type,)
 
         return match
 
@@ -268,6 +280,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         ipv4_src = None
         if packet.get_protocol(tcp.tcp):
             srcTcp = packet.get_protocol(tcp.tcp).src_port
+            dstTcp = packet.get_protocol(tcp.tcp).src_port
             ipProto = 0x06
             print(srcTcp)
 
@@ -277,7 +290,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                     eth_type=0x0800,
                                     ip_proto=0x06,
                                     tcp_src=srcTcp)'''
-        match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ipv4_src, ipProto, srcTcp, dstTcp)
+        match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ip_proto=ipProto, tcp_src=srcTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
                    ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
         inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
@@ -297,9 +310,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                     eth_type=0x0800,
                                     ip_proto=0x06,
                                     tcp_dst=srcTcp)'''
-        if packet.get_protocol(tcp.tcp):
-            dstTcp = packet.get_protocol(tcp.tcp).src_port
-        match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ipv4_src, ipProto, srcTcp, dstTcp)
+
+        match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
+                                  ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=dstTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                    ofp_parser.OFPActionOutput(in_port)]
         inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
