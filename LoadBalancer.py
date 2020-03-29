@@ -273,16 +273,15 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     def add_flow(self, datapath, packet, ofp_parser, ofp, in_port):
         print(packet.get_protocol(ipv4.ipv4))
         srcIp = packet.get_protocol(ipv4.ipv4).src
-        dstIp = packet.get_protocol(ipv4.ipv4).dst
 
         # Don't push forwarding rules if an ARP request is received from a server.
         if srcIp == self.H5_ip or srcIp == self.H6_ip:
             return
 
-        srcTcp = None
+        '''srcTcp = None
         dstTcp = None
         ipProto = None
-        priority = 1
+        priority = 1'''
         if packet.get_protocol(tcp.tcp):
             srcTcp = packet.get_protocol(tcp.tcp).src_port
             dstTcp = packet.get_protocol(tcp.tcp).src_port
@@ -300,8 +299,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                     tcp_src=srcTcp)'''
         match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ip_proto=ipProto, tcp_src=srcTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
-                   ofp_parser.OFPActionSetField(eth_src=self.ip_to_mac[self.current_server]),
-                   ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[dstIp]),
+                   ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[self.current_server]),
                    ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
         inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
 
