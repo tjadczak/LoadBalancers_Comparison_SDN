@@ -34,7 +34,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     H5_ip = "10.0.0.5"                    # Host 5's IP
     H6_mac = "00:00:00:00:00:06"          # Host 6's mac
     H6_ip = "10.0.0.6"                    # Host 6's IP
-    next_server = ""  # Stores the IP of the  next server to use in round robin manner
+    # next_server = ""  # Stores the IP of the  next server to use in round robin manner
     current_server = ""  # Stores the current server's IP
     ip_to_port = {H5_ip: 5, H6_ip: 6}
     ip_to_mac = {"10.0.0.1": "00:00:00:00:00:01",
@@ -67,11 +67,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
     def _monitor(self):
         while True:
-            self.logger.info("---------------------------------------------------")
+            '''self.logger.info("---------------------------------------------------")
             self.logger.info(datetime.datetime.now().strftime("%H:%M:%S"))
             self.logger.info("---------------------------------------------------")
             for dp in self.datapaths.values():
-                self._request_stats(dp)
+                self._request_stats(dp)'''
             hub.sleep(self.time_interval)
 
     def _request_stats(self, datapath):
@@ -243,11 +243,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         datapath.send_msg(out)
 
         # Generate flow from host to server.
-        '''match = ofp_parser.OFPMatch(in_port=in_port,
-                                    ipv4_dst=self.virtual_ip,
-                                    eth_type=0x0800,
-                                    ip_proto=0x06,
-                                    tcp_src=srcTcp)'''
         match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ip_proto=ipProto, tcp_src=srcTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
                    ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[self.current_server]),
@@ -263,13 +258,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         datapath.send_msg(mod)
 
         # Generate reverse flow from server to host.
-        '''match = ofp_parser.OFPMatch(in_port=self.ip_to_port[self.current_server],
-                                    ipv4_src=self.current_server,
-                                    ipv4_dst=srcIp,
-                                    eth_type=0x0800,
-                                    ip_proto=0x06,
-                                    tcp_dst=srcTcp)'''
-
         match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
                                   ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=dstTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
@@ -288,5 +276,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             self.current_server = self.H6_ip
         else:
             self.current_server = self.H5_ip
+
+        print("Next server is gonna be:", self.current_server)
 
 
