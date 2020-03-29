@@ -269,7 +269,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
     # Sets up the flow table in the switch to map IP addresses correctly.
     def add_flow(self, datapath, packet, ofp_parser, ofp, in_port):
-        srcIp = packet.get_protocol(arp.arp).src_ip
+        srcIp = packet.get_protocol(tcp.tcp).src_ip
 
         # Don't push forwarding rules if an ARP request is received from a server.
         if srcIp == self.H5_ip or srcIp == self.H6_ip:
