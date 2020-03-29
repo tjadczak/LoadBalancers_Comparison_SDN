@@ -246,12 +246,14 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     def create_match(self, ofp_parser, in_port, ipv4_dst, eth_type,
                      ipv4_src=None, ip_proto=None, tcp_src=None, tcp_dst=None):
         if tcp_src:
+            print("tcp src:", tcp_src)
             match = ofp_parser.OFPMatch(in_port=in_port,
                                         ipv4_dst=ipv4_dst,
                                         eth_type=eth_type,
                                         ip_proto=ip_proto,
                                         tcp_src=tcp_src)
         elif tcp_dst:
+            print("tcp dst:", tcp_dst)
             match = ofp_parser.OFPMatch(in_port=in_port,
                                         ipv4_dst=ipv4_dst,
                                         ipv4_src=ipv4_src,
@@ -277,7 +279,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         srcTcp = None
         dstTcp = None
         ipProto = None
-        ipv4_src = None
         if packet.get_protocol(tcp.tcp):
             srcTcp = packet.get_protocol(tcp.tcp).src_port
             dstTcp = packet.get_protocol(tcp.tcp).src_port
