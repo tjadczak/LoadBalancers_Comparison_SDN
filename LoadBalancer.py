@@ -50,7 +50,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.monitor_thread = hub.spawn(self._monitor)
         self.time_interval = 1
         self.mac_to_port = {}
-        self.next_server = self.H5_ip
+        # self.next_server = self.H6_ip
         self.current_server = self.H5_ip
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -142,13 +142,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
         if etherFrame.ethertype == ether_types.ETH_TYPE_ARP:
-            #self.add_flow(dp, pkt, ofp_parser, ofp, in_port)
+            # self.add_flow(dp, pkt, ofp_parser, ofp, in_port)
             self.arp_response(dp, pkt, etherFrame, ofp_parser, ofp, in_port)
-            #self.current_server = self.next_server
+            # self.current_server = self.next_server
             return
         else:
             self.add_flow(dp, pkt, ofp_parser, ofp, in_port, msg)
-            self.current_server = self.next_server
+            # self.current_server = self.next_server
             return
 
     # Sends an ARP response to the contacting host with the
@@ -164,12 +164,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # else the target MAC address is set to the one corresponding
         # to the target host's IP.
         if dstIp != self.H5_ip and dstIp != self.H6_ip:
-            if self.next_server == self.H5_ip:
+            srcMac = self.ip_to_mac[self.current_server]
+            '''if self.next_server == self.H5_ip:
                 srcMac = self.H5_mac
                 #self.next_server = self.H6_ip
             else:
                 srcMac = self.H6_mac
-                #self.next_server = self.H5_ip
+                #self.next_server = self.H5_ip'''
         else:
             srcMac = self.ip_to_mac[srcIp]
 
@@ -283,8 +284,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         datapath.send_msg(mod)
 
-        if self.next_server == self.H5_ip:
-            self.next_server = self.H6_ip
+        if self.current_server == self.H5_ip:
+            self.current_server = self.H6_ip
         else:
-            self.next_server = self.H5_ip
+            self.current_server = self.H5_ip
+
 
