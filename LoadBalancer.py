@@ -283,6 +283,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             ipProto = 0x06
             priority = 2
             print(srcTcp)
+        else:
+            return
 
         # Generate flow from host to server.
         '''match = ofp_parser.OFPMatch(in_port=in_port,
