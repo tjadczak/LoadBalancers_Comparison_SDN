@@ -243,21 +243,41 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         )
         datapath.send_msg(out)  # Send out ARP reply
 
+    def create_match(self, ofp_parser, in_port, ipv4_dst, eth_type, ipv4_src, ip_proto, tcp_src, tcp_dest):
+        match = ofp_parser.OFPMatch(in_port=in_port,
+                                    ipv4_dst=ipv4_dst,
+                                    ipv4_src=ipv4_src,
+                                    eth_type=eth_type,
+                                    ip_proto=ip_proto,
+                                    tcp_src=tcp_src,
+                                    tcp_dst=tcp_dest)
+
+        return match
+
     # Sets up the flow table in the switch to map IP addresses correctly.
     def add_flow(self, datapath, packet, ofp_parser, ofp, in_port):
         srcIp = packet.get_protocol(arp.arp).src_ip
-        srcTcp = packet.get_protocol(tcp.tcp).src_port
-        print(srcTcp)
+
         # Don't push forwarding rules if an ARP request is received from a server.
         if srcIp == self.H5_ip or srcIp == self.H6_ip:
             return
 
+        srcTcp = None
+        dstTcp = None
+        ipProto = None
+        ipv4_src = None
+        if packet.get_protocol(tcp.tcp):
+            srcTcp = packet.get_protocol(tcp.tcp).src_port
+            ipProto = 0x06
+            print(srcTcp)
+
         # Generate flow from host to server.
-        match = ofp_parser.OFPMatch(in_port=in_port,
+        '''match = ofp_parser.OFPMatch(in_port=in_port,
                                     ipv4_dst=self.virtual_ip,
                                     eth_type=0x0800,
                                     ip_proto=0x06,
-                                    tcp_src=srcTcp)
+                                    tcp_src=srcTcp)'''
+        match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ipv4_src, ipProto, srcTcp, dstTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
                    ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
         inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
@@ -271,12 +291,15 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         datapath.send_msg(mod)
 
         # Generate reverse flow from server to host.
-        match = ofp_parser.OFPMatch(in_port=self.ip_to_port[self.current_server],
+        '''match = ofp_parser.OFPMatch(in_port=self.ip_to_port[self.current_server],
                                     ipv4_src=self.current_server,
                                     ipv4_dst=srcIp,
                                     eth_type=0x0800,
                                     ip_proto=0x06,
-                                    tcp_dst=srcTcp)
+                                    tcp_dst=srcTcp)'''
+        if packet.get_protocol(tcp.tcp):
+            dstTcp = packet.get_protocol(tcp.tcp).src_port
+        match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ipv4_src, ipProto, srcTcp, dstTcp)
         actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                    ofp_parser.OFPActionOutput(in_port)]
         inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
