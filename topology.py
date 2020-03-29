@@ -15,7 +15,7 @@ def main():
     net = Mininet(controller=None, link=TCLink, autoSetMacs=True, autoStaticArp=True)
     net.addController("c0", controller=RemoteController,
                       ip=REMOTE_CONTROLLER_IP, port=6633)
-    s1 = net.addSwitch('s1')
+    # s1 = net.addSwitch('s1')
 
     host_1 = net.addHost('h1')
     host_2 = net.addHost('h2')

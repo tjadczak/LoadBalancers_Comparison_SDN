@@ -147,7 +147,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             #self.current_server = self.next_server
             return
         else:
-            self.add_flow(dp, pkt, ofp_parser, ofp, in_port)
+            self.add_flow(dp, pkt, ofp_parser, ofp, in_port, msg)
             self.current_server = self.next_server
             return
 
@@ -215,7 +215,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         return match
 
     # Sets up the flow table in the switch to map IP addresses correctly.
-    def add_flow(self, datapath, packet, ofp_parser, ofp, in_port):
+    def add_flow(self, datapath, packet, ofp_parser, ofp, in_port, msg):
         srcIp = packet.get_protocol(ipv4.ipv4).src
 
         # Don't push forwarding rules if an ARP request is received from a server.
@@ -233,6 +233,12 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             priority = 2
         else:
             return
+
+        # Generate and send PacketOut message to switch
+        actions = [ofp_parser.OFPActionOutput(ofp.OFPP_OUT_PORT)]
+        data = msg.data
+        out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port, actions=actions, data=data)
+        datapath.send_msg(out)
 
         # Generate flow from host to server.
         '''match = ofp_parser.OFPMatch(in_port=in_port,
