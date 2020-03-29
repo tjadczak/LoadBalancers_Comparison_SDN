@@ -166,10 +166,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         if dstIp != self.H5_ip and dstIp != self.H6_ip:
             if self.next_server == self.H5_ip:
                 srcMac = self.H5_mac
-                self.next_server = self.H6_ip
+                #self.next_server = self.H6_ip
             else:
                 srcMac = self.H6_mac
-                self.next_server = self.H5_ip
+                #self.next_server = self.H5_ip
         else:
             srcMac = self.ip_to_mac[srcIp]
 
@@ -275,3 +275,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             instructions=inst)
 
         datapath.send_msg(mod)
+
+        if self.next_server == self.H5_ip:
+            self.next_server = self.H6_ip
+        else:
+            self.next_server = self.H5_ip
+
