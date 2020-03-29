@@ -298,8 +298,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                     ip_proto=0x06,
                                     tcp_src=srcTcp)'''
         match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ip_proto=ipProto, tcp_src=srcTcp)
-        actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server,
-                                                arp_tha=self.ip_to_mac[self.current_server]),
+        actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
+                   ofp_parser.OFPActionSetField(eth_src=self.ip_to_mac[self.current_server]),
                    ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
         inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
 
