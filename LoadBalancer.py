@@ -276,10 +276,12 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         srcTcp = None
         dstTcp = None
         ipProto = None
+        priority = 1
         if packet.get_protocol(tcp.tcp):
             srcTcp = packet.get_protocol(tcp.tcp).src_port
             dstTcp = packet.get_protocol(tcp.tcp).src_port
             ipProto = 0x06
+            priority = 2
             print(srcTcp)
 
         # Generate flow from host to server.
@@ -295,7 +297,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         mod = ofp_parser.OFPFlowMod(
             datapath=datapath,
-            priority=1,
+            priority=priority,
             match=match,
             instructions=inst)
 
@@ -317,7 +319,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         mod = ofp_parser.OFPFlowMod(
             datapath=datapath,
-            priority=1,
+            priority=priority,
             match=match,
             instructions=inst)
 
