@@ -50,6 +50,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                  "10.0.0.6": "00:00:00:00:00:06"}
 
     def __init__(self, *args, **kwargs):
+        if args[1] == 'monitor':
+            print("Run monitor")
+            self.monitor_thread = hub.spawn(self._monitor)
+        else:
+            print("No monitor")
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
         self.datapaths = {}
         self.monitor_thread = hub.spawn(self._monitor)
