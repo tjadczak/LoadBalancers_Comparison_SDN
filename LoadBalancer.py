@@ -234,7 +234,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             return
 
         srcTcp = packet.get_protocol(tcp.tcp).src_port
-        dstTcp = packet.get_protocol(tcp.tcp).src_port
+        dstTcp = packet.get_protocol(tcp.tcp).dst_port
         ipProto = 0x06
         priority = 2
 
