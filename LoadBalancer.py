@@ -36,7 +36,12 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     H6_ip = "10.0.0.6"                    # Host 6's IP
     # next_server = ""  # Stores the IP of the  next server to use in round robin manner
     current_server = ""  # Stores the current server's IP
-    ip_to_port = {H5_ip: 5, H6_ip: 6}
+    ip_to_port = {"10.0.0.1": 1,
+                  "10.0.0.2": 2,
+                  "10.0.0.3": 3,
+                  "10.0.0.4": 4,
+                  "10.0.0.5": 5,
+                  "10.0.0.6": 6}
     ip_to_mac = {"10.0.0.1": "00:00:00:00:00:01",
                  "10.0.0.2": "00:00:00:00:00:02",
                  "10.0.0.3": "00:00:00:00:00:03",
@@ -220,6 +225,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     # Sets up the flow table in the switch to map IP addresses correctly.
     def add_flow(self, datapath, packet, ofp_parser, ofp, in_port, msg):
         srcIp = packet.get_protocol(ipv4.ipv4).src
+        dstIp = packet.get_protocol(ipv4.ipv4).dst
 
         if not packet.get_protocol(tcp.tcp):
             print("Not a TCP packet !!!")
@@ -238,7 +244,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
                                       ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=dstTcp)
             actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
-                       ofp_parser.OFPActionOutput(in_port)]
+                       ofp_parser.OFPActionOutput(self.ip_to_port[dstIp])]
             inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
 
             mod = ofp_parser.OFPFlowMod(
