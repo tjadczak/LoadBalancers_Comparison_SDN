@@ -254,8 +254,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match=match,
                 instructions=inst)
 
-            datapath.send_msg(mod)
-            print("Send reverse flow from server to host")
+            '''datapath.send_msg(mod)
+            print("Send reverse flow from server to host")'''
 
             # Generate and send PacketOut message to switch
             data = msg.data
