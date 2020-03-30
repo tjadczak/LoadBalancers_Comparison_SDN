@@ -254,15 +254,23 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match=match,
                 instructions=inst)
 
-            '''datapath.send_msg(mod)
-            print("Send reverse flow from server to host")'''
-
             # Generate and send PacketOut message to switch
             data = msg.data
             out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
                                           actions=actions, data=data)
             datapath.send_msg(out)
             print("Send PacketOut to host")
+
+            # Generate reverse flow from server to host.
+            datapath.send_msg(mod)
+            print("Send reverse flow from server to host")
+
+            '''# Generate and send PacketOut message to switch
+            data = msg.data
+            out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
+                                          actions=actions, data=data)
+            datapath.send_msg(out)
+            print("Send PacketOut to host")'''
 
             '''if self.current_server == self.H5_ip:
                 self.current_server = self.H6_ip
@@ -285,14 +293,22 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match=match,
                 instructions=inst)
 
-            '''datapath.send_msg(mod)
-            print("Send flow from host to server")'''
-
             # Generate and send PacketOut message to switch
+            data = msg.data
+            out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
+                                          actions=actions, data=data)
+            datapath.send_msg(out)
+            print("Send PacketOut to server")
+
+            # Generate flow from host to server.
+            datapath.send_msg(mod)
+            print("Send flow from host to server")
+
+            '''# Generate and send PacketOut message to switch
             data = msg.data
             out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port, actions=actions, data=data)
             datapath.send_msg(out)
-            print("Send PacketOut to server")
+            print("Send PacketOut to server")'''
 
             '''# Generate reverse flow from server to host.
             match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
