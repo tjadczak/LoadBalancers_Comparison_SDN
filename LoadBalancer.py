@@ -221,12 +221,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     def add_flow(self, datapath, packet, ofp_parser, ofp, in_port, msg):
         srcIp = packet.get_protocol(ipv4.ipv4).src
 
-        # Don't push forwarding rules if an ARP request is received from a server.
-        if srcIp == self.H5_ip or srcIp == self.H6_ip:
-            print("Got Packet In from server !!!")
-            return
-
         if not packet.get_protocol(tcp.tcp):
+            print("Not a TCP packet !!!")
             return
 
         srcTcp = packet.get_protocol(tcp.tcp).src_port
@@ -234,51 +230,88 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         ipProto = 0x06
         priority = 2
 
-        # Generate flow from host to server.
-        match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ip_proto=ipProto, tcp_src=srcTcp)
-        actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
-                   ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[self.current_server]),
-                   ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
-        inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+        # Don't push forwarding rules if an ARP request is received from a server.
+        if srcIp == self.H5_ip or srcIp == self.H6_ip:
+            # print("Got Packet In from server !!!")
+            # return
+            # Generate reverse flow from server to host.
+            match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
+                                      ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=dstTcp)
+            actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+                       ofp_parser.OFPActionOutput(in_port)]
+            inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
 
-        mod = ofp_parser.OFPFlowMod(
-            datapath=datapath,
-            priority=priority,
-            match=match,
-            instructions=inst)
+            mod = ofp_parser.OFPFlowMod(
+                datapath=datapath,
+                priority=priority,
+                match=match,
+                instructions=inst)
 
-        datapath.send_msg(mod)
-        print("Send flow from host to server")
+            datapath.send_msg(mod)
+            print("Send reverse flow from server to host")
 
-        # Generate and send PacketOut message to switch
-        '''actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
-                   ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]'''
-        data = msg.data
-        out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port, actions=actions, data=data)
-        datapath.send_msg(out)
-        print("Send PacketOut")
+            # Generate and send PacketOut message to switch
+            '''actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
+                       ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]'''
+            data = msg.data
+            out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
+                                          actions=actions, data=data)
+            datapath.send_msg(out)
+            print("Send PacketOut")
 
-        # Generate reverse flow from server to host.
-        match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
-                                  ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=dstTcp)
-        actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
-                   ofp_parser.OFPActionOutput(in_port)]
-        inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+            if self.current_server == self.H5_ip:
+                self.current_server = self.H6_ip
+            else:
+                self.current_server = self.H5_ip
 
-        mod = ofp_parser.OFPFlowMod(
-            datapath=datapath,
-            priority=priority,
-            match=match,
-            instructions=inst)
+            print("Next server is gonna be:", self.current_server)
 
-        datapath.send_msg(mod)
-        print("Send reverse flow from server to host")
+        else:
+            # Generate flow from host to server.
+            match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ip_proto=ipProto, tcp_src=srcTcp)
+            actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
+                       ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[self.current_server]),
+                       ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
+            inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
 
-        if self.current_server == self.H5_ip:
+            mod = ofp_parser.OFPFlowMod(
+                datapath=datapath,
+                priority=priority,
+                match=match,
+                instructions=inst)
+
+            datapath.send_msg(mod)
+            print("Send flow from host to server")
+
+            # Generate and send PacketOut message to switch
+            '''actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
+                       ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]'''
+            data = msg.data
+            out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port, actions=actions, data=data)
+            datapath.send_msg(out)
+            print("Send PacketOut")
+
+            '''# Generate reverse flow from server to host.
+            match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
+                                      ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=dstTcp)
+            actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+                       ofp_parser.OFPActionOutput(in_port)]
+            inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+    
+            mod = ofp_parser.OFPFlowMod(
+                datapath=datapath,
+                priority=priority,
+                match=match,
+                instructions=inst)
+    
+            datapath.send_msg(mod)
+            print("Send reverse flow from server to host")'''
+
+        '''if self.current_server == self.H5_ip:
             self.current_server = self.H6_ip
         else:
             self.current_server = self.H5_ip
 
-        print("Next server is gonna be:", self.current_server)
+        print("Next server is gonna be:", self.current_server)'''
 
 
