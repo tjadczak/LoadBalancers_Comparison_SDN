@@ -71,11 +71,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
     def _monitor(self):
         while True:
-            '''self.logger.info("---------------------------------------------------")
+            self.logger.info("---------------------------------------------------")
             self.logger.info(datetime.datetime.now().strftime("%H:%M:%S"))
             self.logger.info("---------------------------------------------------")
             for dp in self.datapaths.values():
-                self._request_stats(dp)'''
+                self._request_stats(dp)
             hub.sleep(self.time_interval)
 
     def _request_stats(self, datapath):
