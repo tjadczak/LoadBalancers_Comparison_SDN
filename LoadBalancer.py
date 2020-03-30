@@ -54,7 +54,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.datapaths = {}
         self.monitor_thread = hub.spawn(self._monitor)
         self.time_interval = 1
-        self.mac_to_port = {}
         # self.next_server = self.H6_ip
         self.current_server = self.H5_ip
 
@@ -238,7 +237,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         ipProto = 0x06
         priority = 2
 
-        # Don't push forwarding rules if an ARP request is received from a server.
         if srcIp == self.H5_ip or srcIp == self.H6_ip:
             # print("Got Packet In from server !!!")
             # return
