@@ -333,11 +333,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             datapath.send_msg(out)
             print("Send PacketOut to server")
 
-        '''if self.current_server == self.H5_ip:
+        if self.current_server == self.H5_ip:
             self.current_server = self.H6_ip
         else:
             self.current_server = self.H5_ip
 
-        print("Next server is gonna be:", self.current_server)'''
+        print("Next server is gonna be:", self.current_server)
 
 
