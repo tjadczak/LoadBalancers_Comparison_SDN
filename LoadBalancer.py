@@ -243,7 +243,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             # print("Got Packet In from server !!!")
             # return
             # Generate reverse flow from server to host.
-            match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
+            match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], dstIp, 0x0800,
                                       ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=dstTcp)
             actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                        ofp_parser.OFPActionOutput(self.ip_to_port[dstIp])]
