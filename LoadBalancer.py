@@ -223,19 +223,16 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         # Don't push forwarding rules if an ARP request is received from a server.
         if srcIp == self.H5_ip or srcIp == self.H6_ip:
+            print("Got Packet In from server !!!")
             return
 
-        '''srcTcp = None
-        dstTcp = None
-        ipProto = None
-        priority = 1'''
-        if packet.get_protocol(tcp.tcp):
-            srcTcp = packet.get_protocol(tcp.tcp).src_port
-            dstTcp = packet.get_protocol(tcp.tcp).src_port
-            ipProto = 0x06
-            priority = 2
-        else:
+        if not packet.get_protocol(tcp.tcp):
             return
+
+        srcTcp = packet.get_protocol(tcp.tcp).src_port
+        dstTcp = packet.get_protocol(tcp.tcp).src_port
+        ipProto = 0x06
+        priority = 2
 
         # Generate flow from host to server.
         match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ip_proto=ipProto, tcp_src=srcTcp)
