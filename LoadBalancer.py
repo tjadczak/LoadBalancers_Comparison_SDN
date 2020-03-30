@@ -258,8 +258,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             data = msg.data
             out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
                                           actions=actions, data=data)
-            datapath.send_msg(out)
-            print("Send PacketOut to host")
+            '''datapath.send_msg(out)
+            print("Send PacketOut to host")'''
 
             # Generate reverse flow from server to host.
             datapath.send_msg(mod)
