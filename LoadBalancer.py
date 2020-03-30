@@ -135,7 +135,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
-        print("Got PacketIn")
+        print("Got Packet In")
         msg = ev.msg
         dp = msg.datapath
         ofp = dp.ofproto
@@ -171,6 +171,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # to the target host's IP.
         if dstIp != self.H5_ip and dstIp != self.H6_ip:
             srcMac = self.ip_to_mac[self.current_server]
+            print("Sending ARP reply to HOST")
             '''if self.next_server == self.H5_ip:
                 srcMac = self.H5_mac
                 #self.next_server = self.H6_ip
@@ -179,6 +180,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 #self.next_server = self.H5_ip'''
         else:
             srcMac = self.ip_to_mac[srcIp]
+            print("Sending ARP reply to SERVER")
 
         e = ethernet.ethernet(dstMac, srcMac, ether_types.ETH_TYPE_ARP)
         a = arp.arp(1, 0x0800, 6, 4, 2, srcMac, srcIp, dstMac, dstIp)
@@ -198,7 +200,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             data=p.data
         )
         datapath.send_msg(out)  # Send out ARP reply
-        print("Send ARP reply")
+        print("ARP reply send")
 
     def create_match(self, ofp_parser, in_port, ipv4_dst, eth_type,
                      ipv4_src=None, ip_proto=None, tcp_src=None, tcp_dst=None):
@@ -263,7 +265,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
                                           actions=actions, data=data)
             datapath.send_msg(out)
-            print("Send PacketOut")
+            print("Send PacketOut to host")
 
             if self.current_server == self.H5_ip:
                 self.current_server = self.H6_ip
@@ -295,7 +297,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             data = msg.data
             out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port, actions=actions, data=data)
             datapath.send_msg(out)
-            print("Send PacketOut")
+            print("Send PacketOut to server")
 
             '''# Generate reverse flow from server to host.
             match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
