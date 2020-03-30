@@ -293,10 +293,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             # Generate and send PacketOut message to switch
             '''actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
                        ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]'''
-            data = msg.data
+            '''data = msg.data
             out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port, actions=actions, data=data)
             datapath.send_msg(out)
-            print("Send PacketOut to server")
+            print("Send PacketOut to server")'''
 
             '''# Generate reverse flow from server to host.
             match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
