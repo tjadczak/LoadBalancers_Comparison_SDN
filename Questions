@@ -1,0 +1,14 @@
+CPU limited do 1% na serwerach
+openload generuje płaski ruch? inny tool żeby warunki były prawdzwisze?
+Ile serwerów?
+Czy topologia jest dobra?
+
+
+todo:
+kolektor sflow'a do zbierania statystyk
+LB per flow lub per tput?
+
+ditg distributed internet traffic generator
+video, torrent
+
+resposne time = tc.link
