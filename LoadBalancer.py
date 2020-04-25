@@ -13,7 +13,6 @@ from ryu.lib.packet import arp
 from operator import attrgetter
 from ryu.lib import hub
 import datetime
-import time
 
 """ 
     TOPOLOGY:
@@ -57,21 +56,22 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.time_interval = 1
         # self.next_server = self.H6_ip
         self.current_server = self.H5_ip
-        time.sleep(1)
-        self.logger.info("---------------------------------------------------")
+        self.logger.info("--------------------------------------------------------------")
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
-        self.logger.info("---------------------------------------------------")
+        self.logger.info("--------------------------------------------------------------")
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
         datapath = ev.datapath
         if ev.state == MAIN_DISPATCHER:
             if datapath.id not in self.datapaths:
-                self.logger.debug('register datapath: %016x', datapath.id)
+                self.logger.info("%s: Register datapath: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+                                 datapath.id)
                 self.datapaths[datapath.id] = datapath
         elif ev.state == DEAD_DISPATCHER:
             if datapath.id in self.datapaths:
-                self.logger.debug('unregister datapath: %016x', datapath.id)
+                self.logger.info("%s: Unregister datapath: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+                                 datapath.id)
                 del self.datapaths[datapath.id]
 
     def _monitor(self):
@@ -251,7 +251,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         priority = 2
 
         if srcIp == self.H5_ip or srcIp == self.H6_ip:
-            print("Got Packet In from server !!!")
+            self.logger.warning("%s: Got IPv4 TCP Packet In from server, but flow should be already installed to handle this !",
+                                datetime.datetime.now().strftime('%H:%M:%S.%f'))
             return
 
             '''# Generate reverse flow from server to host.
@@ -315,7 +316,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
             # Generate flow from host to server.
             datapath.send_msg(mod)
-            print("Send flow from host to server")
+            self.logger.info("%s: Send new flow from host to server", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
             '''# Generate and send PacketOut message to switch
             data = msg.data
@@ -337,20 +338,21 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 instructions=inst)
     
             datapath.send_msg(mod)
-            print("Send reverse flow from server to host")
+            self.logger.info("%s: Send reverse new flow from server to host", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
             # Generate and send PacketOut message to switch
             data = msg.data
             out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
                                           actions=actions, data=data)
             datapath.send_msg(out)
-            print("Send PacketOut to server")
+            self.logger.info("%s: Send Packet Out to server", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
         if self.current_server == self.H5_ip:
             self.current_server = self.H6_ip
         else:
             self.current_server = self.H5_ip
 
-        print("Next server is gonna be:", self.current_server)
+        self.logger.info("%s: Next server is gonna be: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.current_server)
+
 
 
