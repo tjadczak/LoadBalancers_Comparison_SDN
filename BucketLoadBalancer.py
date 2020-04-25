@@ -64,6 +64,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
         self.datapaths = {}
+        self.current_server = self.H5_ip
         self.logger.info("--------------------------------------------------------------")
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("--------------------------------------------------------------")
