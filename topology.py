@@ -20,8 +20,8 @@ def main():
     host_2 = net.addHost('h2')
     host_3 = net.addHost('h3')
     host_4 = net.addHost('h4')
-    server_1 = net.addHost('h5', cpu=0.01)
-    server_2 = net.addHost('h6', cpu=0.01)
+    server_1 = net.addHost('h5', cpu=0.1)
+    server_2 = net.addHost('h6', cpu=0.1)
     switch = net.addSwitch('s1', cls=OVSSwitch)
 
     net.addLink(switch, host_1, bw=10)
