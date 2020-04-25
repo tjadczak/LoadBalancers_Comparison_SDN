@@ -54,6 +54,12 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    4: "00:00:00:00:00:04",
                    5: "00:00:00:00:00:05",
                    6: "00:00:00:00:00:06"}
+    port_to_ip = { 1: "10.0.0.1",
+                   2: "10.0.0.2",
+                   3: "10.0.0.3",
+                   4: "10.0.0.4",
+                   5: "10.0.0.5",
+                   6: "10.0.0.6"}
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
@@ -142,14 +148,18 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         self.send_group_mod(datapath)
         for host in range(1, 5):
-            actions = [parser.OFPActionGroup(group_id=self.group_table_id)]
             match = parser.OFPMatch(in_port=host)
+            actions = [parser.OFPActionGroup(group_id=self.group_table_id)]
             self.add_flow(datapath, 10, match, actions)
 
-            actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
-                       parser.OFPActionOutput(host)]
             for server in range(5,7):
-                match = parser.OFPMatch(in_port=server, eth_dst=self.port_to_mac[host])
+                match = parser.OFPMatch(
+                    in_port=server,
+                    eth_type=0x0800,
+                    eth_dst=self.port_to_mac[host],
+                    ipv4_src=self.port_to_ip[server])
+                actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+                           parser.OFPActionOutput(host)]
                 self.add_flow(datapath, 10, match, actions)
 
 
