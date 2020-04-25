@@ -143,7 +143,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         pkt = packet.Packet(msg.data)
         etherFrame = pkt.get_protocol(ethernet.ethernet)
 
-        self.logger.info(datetime.datetime.now().strftime("%H:%M:%S"), "Got Packet In = ", etherFrame.ethertype)
+        self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime("%H:%M:%S"), etherFrame.ethertype)
 
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
