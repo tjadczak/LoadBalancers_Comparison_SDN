@@ -6,10 +6,7 @@ from mininet.node import RemoteController
 from mininet.link import TCLink
 from mininet.node import CPULimitedHost
 
-
-
 REMOTE_CONTROLLER_IP = "127.0.0.1"
-
 
 def main():
     setLogLevel('info')
@@ -17,7 +14,6 @@ def main():
     net = Mininet(controller=None, host=CPULimitedHost, link=TCLink, autoSetMacs=True, autoStaticArp=True)
     net.addController("c0", controller=RemoteController,
                       ip=REMOTE_CONTROLLER_IP, port=6633)
-    # s1 = net.addSwitch('s1')
 
     host_1 = net.addHost('h1')
     host_2 = net.addHost('h2')

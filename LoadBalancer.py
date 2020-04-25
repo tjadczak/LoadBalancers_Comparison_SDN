@@ -71,11 +71,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
     def _monitor(self):
         while True:
-            self.logger.info("---------------------------------------------------")
-            self.logger.info(datetime.datetime.now().strftime("%H:%M:%S"))
-            self.logger.info("---------------------------------------------------")
-            for dp in self.datapaths.values():
-                self._request_stats(dp)
+            #self.logger.info("---------------------------------------------------")
+            #self.logger.info(datetime.datetime.now().strftime("%H:%M:%S"))
+            #self.logger.info("---------------------------------------------------")
+            #for dp in self.datapaths.values():
+            #    self._request_stats(dp)
             hub.sleep(self.time_interval)
 
     def _request_stats(self, datapath):
@@ -241,7 +241,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             print("Got Packet In from server !!!")
             return
 
-            '''# Generate reverse flow from server to host.
+        '''# Generate reverse flow from server to host.
             match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], dstIp, 0x0800,
                                       ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=dstTcp)
             actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
