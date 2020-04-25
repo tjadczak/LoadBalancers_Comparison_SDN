@@ -56,6 +56,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.time_interval = 1
         # self.next_server = self.H6_ip
         self.current_server = self.H5_ip
+        self.logger.info("---------------------------------------------------")
+        self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
+        self.logger.info("---------------------------------------------------")
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
