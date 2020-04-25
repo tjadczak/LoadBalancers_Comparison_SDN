@@ -348,7 +348,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             out = ofp_parser.OFPPacketOut(
                 datapath=datapath,
                 buffer_id=ofp.OFP_NO_BUFFER,
-                in_port=in_port,
+                in_port=self.ip_to_port[self.current_server],
                 actions=actions,
                 data=data)
             datapath.send_msg(out)
