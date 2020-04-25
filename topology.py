@@ -24,12 +24,12 @@ def main():
     server_2 = net.addHost('h6', cpu=0.5)
     switch = net.addSwitch('s1', cls=OVSSwitch)
 
-    net.addLink(switch, host_1, bw=10)
-    net.addLink(switch, host_2, bw=10)
-    net.addLink(switch, host_3, bw=10)
-    net.addLink(switch, host_4, bw=10)
-    net.addLink(switch, server_1, bw=10)
-    net.addLink(switch, server_2, bw=10)
+    net.addLink(switch, host_1, bw=10, delay='50ms')
+    net.addLink(switch, host_2, bw=10, delay='50ms')
+    net.addLink(switch, host_3, bw=10, delay='50ms')
+    net.addLink(switch, host_4, bw=10, delay='50ms')
+    net.addLink(switch, server_1, bw=10, delay='50ms')
+    net.addLink(switch, server_2, bw=10, delay='50ms')
 
     net.start()
     server_1.sendCmd("python -m SimpleHTTPServer 80 >& ./http_1.log &")
