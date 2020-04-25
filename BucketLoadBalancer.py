@@ -141,7 +141,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.add_flow(datapath, 0, match, actions)
 
         self.send_group_mod(datapath)
-        for host in range(4):
+        for host in range(1, 5):
             actions = [parser.OFPActionGroup(group_id=self.group_table_id)]
             match = parser.OFPMatch(in_port=host)
             self.add_flow(datapath, 10, match, actions)
