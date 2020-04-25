@@ -246,10 +246,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         actions1 = [parser.OFPActionSetField(ipv4_dst=self.H5_ip),
                     parser.OFPActionSetField(eth_dst=self.H5_mac),
-                    parser.OFPActionOutput(self.ip_to_port(self.H5_ip))]
+                    parser.OFPActionOutput(self.ip_to_port[self.H5_ip])]
         actions2 = [parser.OFPActionSetField(ipv4_dst=self.H6_ip),
                     parser.OFPActionSetField(eth_dst=self.H6_mac),
-                    parser.OFPActionOutput(self.ip_to_port(self.H6_ip))]
+                    parser.OFPActionOutput(self.ip_to_port[self.H6_ip])]
 
         buckets = [parser.OFPBucket(LB_WEIGHT1, watch_port, watch_group, actions=actions1),
                    parser.OFPBucket(LB_WEIGHT2, watch_port, watch_group, actions=actions2)]
