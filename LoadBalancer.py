@@ -327,7 +327,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             # Generate reverse flow from server to host.
             match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
                                       ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=srcTcp)
-            actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+            actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
                        ofp_parser.OFPActionOutput(in_port)]
             inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
     
@@ -353,18 +353,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 data=data)
             datapath.send_msg(out)
             self.logger.info("%s: Send Packet Out to server", datetime.datetime.now().strftime('%H:%M:%S.%f'))
-
-            '''# ARP action list
-            actions = [ofp_parser.OFPActionOutput(ofp.OFPP_IN_PORT)]
-            # ARP output message
-            out = ofp_parser.OFPPacketOut(
-                datapath=datapath,
-                buffer_id=ofp.OFP_NO_BUFFER,
-                in_port=in_port,
-                actions=actions,
-                data=p.data
-            )
-            datapath.send_msg(out)  # Send out ARP reply'''
 
         if self.current_server == self.H5_ip:
             self.current_server = self.H6_ip
