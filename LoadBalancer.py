@@ -344,6 +344,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             # Generate and send PacketOut message to switch
             data = msg.data
             actions = [ofp_parser.OFPActionSetField(ipv4_dst=self.current_server),
+                       ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[self.current_server]),
                        ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
             out = ofp_parser.OFPPacketOut(
                 datapath=datapath,
