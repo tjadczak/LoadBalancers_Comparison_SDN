@@ -5,6 +5,7 @@ from mininet.log import setLogLevel
 from mininet.node import RemoteController
 from mininet.link import TCLink
 from mininet.node import CPULimitedHost
+from mininet.node import OVSSwitch
 
 REMOTE_CONTROLLER_IP = "127.0.0.1"
 
@@ -21,7 +22,7 @@ def main():
     host_4 = net.addHost('h4')
     server_1 = net.addHost('h5', cpu=0.01)
     server_2 = net.addHost('h6', cpu=0.01)
-    switch = net.addSwitch('s1')
+    switch = net.addSwitch('s1', cls=OVSSwitch)
 
     net.addLink(switch, host_1, bw=10)
     net.addLink(switch, host_2, bw=10)
