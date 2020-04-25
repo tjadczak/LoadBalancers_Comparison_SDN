@@ -148,14 +148,16 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         self.send_group_mod(datapath)
         for host in range(1, 5):
-            match = parser.OFPMatch(in_port=host)
+            match = parser.OFPMatch(
+                in_port=host,
+                eth_type=ether_types.ETH_TYPE_IP)
             actions = [parser.OFPActionGroup(group_id=self.group_table_id)]
             self.add_flow(datapath, 10, match, actions)
 
             for server in range(5,7):
                 match = parser.OFPMatch(
                     in_port=server,
-                    eth_type=0x0800,
+                    eth_type=ether_types.ETH_TYPE_IP,
                     eth_dst=self.port_to_mac[host],
                     ipv4_src=self.port_to_ip[server])
                 actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
