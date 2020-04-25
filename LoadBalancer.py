@@ -143,18 +143,25 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         pkt = packet.Packet(msg.data)
         etherFrame = pkt.get_protocol(ethernet.ethernet)
 
-        self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3], etherFrame.ethertype)
-
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
         if etherFrame.ethertype == ether_types.ETH_TYPE_ARP:
+            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f')[:-6],
+                             "ETH_TYPE_ARP")
             # self.add_flow(dp, pkt, ofp_parser, ofp, in_port)
             self.arp_response(dp, pkt, etherFrame, ofp_parser, ofp, in_port)
             # self.current_server = self.next_server
             return
-        else:
+        elif etherFrame.ethertype == ether_types.ETH_TYPE_IP:
+            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f')[:-6],
+                             "ETH_TYPE_IP")
             self.add_flow(dp, pkt, ofp_parser, ofp, in_port, msg)
             # self.current_server = self.next_server
+            return
+        else:
+            self.logger.warning("Got Packet In which is nor ARP nor IPv4 !")
+            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f')[:-6],
+                             etherFrame.ethertype)
             return
 
     # Sends an ARP response to the contacting host with the
