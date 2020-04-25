@@ -148,8 +148,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
             actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                        parser.OFPActionOutput(host)]
-            match = parser.OFPMatch(eth_dst=self.port_to_mac[host])
-            self.add_flow(datapath, 10, match, actions)
+            for server in range(5,7):
+                match = parser.OFPMatch(in_port=server, eth_dst=self.port_to_mac[host])
+                self.add_flow(datapath, 10, match, actions)
 
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
