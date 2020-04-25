@@ -146,21 +146,21 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
         if etherFrame.ethertype == ether_types.ETH_TYPE_ARP:
-            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f')[:-6],
+            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
                              "ETH_TYPE_ARP")
             # self.add_flow(dp, pkt, ofp_parser, ofp, in_port)
             self.arp_response(dp, pkt, etherFrame, ofp_parser, ofp, in_port)
             # self.current_server = self.next_server
             return
         elif etherFrame.ethertype == ether_types.ETH_TYPE_IP:
-            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f')[:-6],
+            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
                              "ETH_TYPE_IP")
             self.add_flow(dp, pkt, ofp_parser, ofp, in_port, msg)
             # self.current_server = self.next_server
             return
         else:
             self.logger.warning("Got Packet In which is nor ARP nor IPv4 !")
-            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f')[:-6],
+            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
                              etherFrame.ethertype)
             return
 
@@ -178,7 +178,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # to the target host's IP.
         if dstIp != self.H5_ip and dstIp != self.H6_ip:
             srcMac = self.ip_to_mac[self.current_server]
-            print("Sending ARP reply to HOST")
+            self.logger.info("%s: Sending ARP reply to HOST", datetime.datetime.now().strftime('%H:%M:%S.%f'))
             '''if self.next_server == self.H5_ip:
                 srcMac = self.H5_mac
                 #self.next_server = self.H6_ip
@@ -187,7 +187,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 #self.next_server = self.H5_ip'''
         else:
             srcMac = self.ip_to_mac[srcIp]
-            print("Sending ARP reply to SERVER")
+            self.logger.info("%s: Sending ARP reply to SERVER", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
         e = ethernet.ethernet(dstMac, srcMac, ether_types.ETH_TYPE_ARP)
         a = arp.arp(1, 0x0800, 6, 4, 2, srcMac, srcIp, dstMac, dstIp)
@@ -207,7 +207,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             data=p.data
         )
         datapath.send_msg(out)  # Send out ARP reply
-        print("ARP reply send")
+        self.logger.info("%s: ARP reply send", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
     def create_match(self, ofp_parser, in_port, ipv4_dst, eth_type,
                      ipv4_src=None, ip_proto=None, tcp_src=None, tcp_dst=None):
@@ -237,7 +237,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         dstIp = packet.get_protocol(ipv4.ipv4).dst
 
         if not packet.get_protocol(tcp.tcp):
-            print("Not a TCP packet !!!")
+            self.logger.warning("%s: Not a TCP packet !!!", datetime.datetime.now().strftime('%H:%M:%S.%f'))
             return
 
         srcTcp = packet.get_protocol(tcp.tcp).src_port
