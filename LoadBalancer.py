@@ -13,6 +13,7 @@ from ryu.lib.packet import arp
 from operator import attrgetter
 from ryu.lib import hub
 import datetime
+import time
 
 """ 
     TOPOLOGY:
@@ -56,6 +57,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.time_interval = 1
         # self.next_server = self.H6_ip
         self.current_server = self.H5_ip
+        time.sleep(1)
         self.logger.info("---------------------------------------------------")
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("---------------------------------------------------")
