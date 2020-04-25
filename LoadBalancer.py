@@ -151,21 +151,18 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
         if etherFrame.ethertype == ether_types.ETH_TYPE_ARP:
-            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+            self.logger.info("%s: Got Packet In: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
                              "ETH_TYPE_ARP")
-            # self.add_flow(dp, pkt, ofp_parser, ofp, in_port)
             self.arp_response(dp, pkt, etherFrame, ofp_parser, ofp, in_port)
-            # self.current_server = self.next_server
             return
         elif etherFrame.ethertype == ether_types.ETH_TYPE_IP:
-            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+            self.logger.info("%s: Got Packet In: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
                              "ETH_TYPE_IP")
             self.add_flow(dp, pkt, ofp_parser, ofp, in_port, msg)
-            # self.current_server = self.next_server
             return
         else:
             self.logger.warning("Got Packet In which is nor ARP nor IPv4 !")
-            self.logger.info("%s: Got Packet In = %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+            self.logger.info("%s: Got Packet In: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
                              etherFrame.ethertype)
             return
 
@@ -184,12 +181,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         if dstIp != self.H5_ip and dstIp != self.H6_ip:
             srcMac = self.ip_to_mac[self.current_server]
             self.logger.info("%s: Sending ARP reply to HOST", datetime.datetime.now().strftime('%H:%M:%S.%f'))
-            '''if self.next_server == self.H5_ip:
-                srcMac = self.H5_mac
-                #self.next_server = self.H6_ip
-            else:
-                srcMac = self.H6_mac
-                #self.next_server = self.H5_ip'''
         else:
             srcMac = self.ip_to_mac[srcIp]
             self.logger.info("%s: Sending ARP reply to SERVER", datetime.datetime.now().strftime('%H:%M:%S.%f'))
@@ -239,59 +230,20 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     # Sets up the flow table in the switch to map IP addresses correctly.
     def add_flow(self, datapath, packet, ofp_parser, ofp, in_port, msg):
         srcIp = packet.get_protocol(ipv4.ipv4).src
-        dstIp = packet.get_protocol(ipv4.ipv4).dst
 
         if not packet.get_protocol(tcp.tcp):
             self.logger.warning("%s: Not a TCP packet !!!", datetime.datetime.now().strftime('%H:%M:%S.%f'))
             return
 
         srcTcp = packet.get_protocol(tcp.tcp).src_port
-        dstTcp = packet.get_protocol(tcp.tcp).dst_port
         ipProto = 0x06
         priority = 2
 
         if srcIp == self.H5_ip or srcIp == self.H6_ip:
-            self.logger.warning("%s: Got IPv4 TCP Packet In from server, but flow should be already installed to handle this !",
-                                datetime.datetime.now().strftime('%H:%M:%S.%f'))
+            self.logger.warning(
+                "%s: Got IPv4 TCP Packet In from server, but flow should be already installed to handle this !",
+                datetime.datetime.now().strftime('%H:%M:%S.%f'))
             return
-
-            '''# Generate reverse flow from server to host.
-            match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], dstIp, 0x0800,
-                                      ipv4_src=self.current_server, ip_proto=ipProto, tcp_dst=dstTcp)
-            actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
-                       ofp_parser.OFPActionOutput(self.ip_to_port[dstIp])]
-            inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-
-            mod = ofp_parser.OFPFlowMod(
-                datapath=datapath,
-                priority=priority,
-                match=match,
-                instructions=inst)
-
-            # Generate and send PacketOut message to switch
-            data = msg.data
-            out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
-                                          actions=actions, data=data)'''
-            '''datapath.send_msg(out)
-            print("Send PacketOut to host")'''
-
-            # Generate reverse flow from server to host.
-            '''datapath.send_msg(mod)
-            print("Send reverse flow from server to host")'''
-
-            '''# Generate and send PacketOut message to switch
-            data = msg.data
-            out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
-                                          actions=actions, data=data)
-            datapath.send_msg(out)
-            print("Send PacketOut to host")'''
-
-            '''if self.current_server == self.H5_ip:
-                self.current_server = self.H6_ip
-            else:
-                self.current_server = self.H5_ip
-
-            print("Next server is gonna be:", self.current_server)'''
 
         else:
             # Generate flow from host to server.
@@ -300,29 +252,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                        ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[self.current_server]),
                        ofp_parser.OFPActionOutput(self.ip_to_port[self.current_server])]
             inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-
             mod = ofp_parser.OFPFlowMod(
                 datapath=datapath,
                 priority=priority,
                 match=match,
                 instructions=inst)
-
-            '''# Generate and send PacketOut message to switch
-            data = msg.data
-            out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port,
-                                          actions=actions, data=data)
-            datapath.send_msg(out)
-            print("Send PacketOut to server")'''
-
-            # Generate flow from host to server.
             datapath.send_msg(mod)
             self.logger.info("%s: Send new flow from host to server", datetime.datetime.now().strftime('%H:%M:%S.%f'))
-
-            '''# Generate and send PacketOut message to switch
-            data = msg.data
-            out = ofp_parser.OFPPacketOut(datapath=datapath, buffer_id=ofp.OFP_NO_BUFFER, in_port=in_port, actions=actions, data=data)
-            datapath.send_msg(out)
-            print("Send PacketOut to server")'''
 
             # Generate reverse flow from server to host.
             match = self.create_match(ofp_parser, self.ip_to_port[self.current_server], srcIp, 0x0800,
@@ -330,16 +266,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                        ofp_parser.OFPActionOutput(in_port)]
             inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-    
             mod = ofp_parser.OFPFlowMod(
                 datapath=datapath,
                 priority=priority,
                 match=match,
                 instructions=inst)
-    
             datapath.send_msg(mod)
             self.logger.info("%s: Send reverse new flow from server to host", datetime.datetime.now().strftime('%H:%M:%S.%f'))
-
 
             # Generate and send PacketOut message to switch
             data = msg.data
@@ -359,7 +292,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             self.current_server = self.H6_ip
         else:
             self.current_server = self.H5_ip
-
         self.logger.info("%s: Next server is gonna be: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.current_server)
 
 
