@@ -102,7 +102,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             actions = [parser.OFPActionGroup(group_id=self.group_table_id)]
             self.add_flow(datapath, 10, match, actions)
 
-            '''for server in range(5,7):
+            for server in range(5,7):
                 match = parser.OFPMatch(
                     in_port=server,
                     eth_type=ether_types.ETH_TYPE_IP,
@@ -110,7 +110,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=self.port_to_ip[server])
                 actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                            parser.OFPActionOutput(host)]
-                self.add_flow(datapath, 10, match, actions)'''
+                self.add_flow(datapath, 10, match, actions)
 
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
