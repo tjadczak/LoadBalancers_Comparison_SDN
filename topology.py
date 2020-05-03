@@ -73,6 +73,10 @@ def sendTopology(net, agent, collector):
         linkName = "{}-{}".format(switchName, hostName)
         topo['links'][linkName] = {'node1': switchName, 'port1': switchPort,
                                    'node2': hostName, 'port2': hostPort}
+        
+        #linkName = "{}-{}".format(hostName, switchName)
+        #topo['links'][linkName] = {'node1': hostName, 'port1': hostPort,
+        #                           'node2': switchName, 'port2': switchPort}
 
     print(topo)
 
@@ -91,7 +95,7 @@ def main():
     host_4 = net.addHost('h4')
     server_1 = net.addHost('h5', cpu=0.5)
     server_2 = net.addHost('h6', cpu=0.5)
-    switch = net.addSwitch('s1', cls=OVSSwitch)
+    switch = net.addSwitch('s1', cls=OVSSwitch, protocols='OpenFlow15')
 
     net.addLink(switch, host_1, bw=10, delay='50ms')
     net.addLink(switch, host_2, bw=10, delay='50ms')

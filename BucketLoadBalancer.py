@@ -3,7 +3,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib.packet.packet import Packet
-from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ofproto_v1_3, ofproto_v1_5
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import tcp, udp, icmp
@@ -30,7 +30,7 @@ import json
 
 
 class SimpleLoadBalancer(app_manager.RyuApp):
-    OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
+    OFP_VERSIONS = [ofproto_v1_5.OFP_VERSION]
     virtual_ip = "10.0.0.10"  # The virtual server IP
     # Hosts 5 and 6 are servers.
     H5_mac = "00:00:00:00:00:05"          # Host 5's mac
@@ -76,7 +76,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.logger.info("--------------------------------------------------------------")
 
     def SendElephantFlowMonitor(self):
-        flowUdp = {'keys': 'link:inputifindex,ipsource,ipdestination,ipprotocol,udpsourceport,udpdestinationport',
+        flowUdp = {'keys': 'link:outputifindex,ipsource,ipdestination,ipprotocol,udpsourceport,udpdestinationport',
                    'value': 'bytes'}
         # flowTcp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,tcpsourceport,tcpdestinationport','value':'bytes'}
         requests.put(self.rt + '/flow/pair/json', data=json.dumps(flowUdp))
@@ -201,11 +201,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         # ARP action list
         actions = [ofp_parser.OFPActionOutput(ofp.OFPP_IN_PORT)]
+        match = ofp_parser.OFPMatch(in_port=in_port)
         # ARP output message
         out = ofp_parser.OFPPacketOut(
             datapath=datapath,
             buffer_id=ofp.OFP_NO_BUFFER,
-            in_port=in_port,
+            #in_port=in_port,
+            match=match,
             actions=actions,
             data=p.data
         )
@@ -232,11 +234,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        LB_WEIGHT1 = 50  # percentage
-        LB_WEIGHT2 = 50  # percentage
+        #LB_WEIGHT1 = 50  # percentage
+        #LB_WEIGHT2 = 50  # percentage
 
-        watch_port = ofproto_v1_3.OFPP_ANY
-        watch_group = ofproto_v1_3.OFPQ_ALL
+        #watch_port = 0
+        #watch_port = ofproto_v1_5.OFPP_ANY
+        #watch_group = 0
+        #watch_group = ofproto_v1_5.OFPQ_ALL
 
         actions1 = [parser.OFPActionSetField(ipv4_dst=self.H5_ip),
                     parser.OFPActionSetField(eth_dst=self.H5_mac),
@@ -244,11 +248,15 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         actions2 = [parser.OFPActionSetField(ipv4_dst=self.H6_ip),
                     parser.OFPActionSetField(eth_dst=self.H6_mac),
                     parser.OFPActionOutput(self.ip_to_port[self.H6_ip])]
-
-        buckets = [parser.OFPBucket(LB_WEIGHT1, watch_port, watch_group, actions=actions1),
-                   parser.OFPBucket(LB_WEIGHT2, watch_port, watch_group, actions=actions2)]
+        
+        command_bucket_id=ofproto.OFPG_BUCKET_ALL
+        
+        #buckets = [parser.OFPBucket(LB_WEIGHT1, watch_port, watch_group, actions1),
+        #           parser.OFPBucket(LB_WEIGHT2, watch_port, watch_group, actions2)]
+        buckets = [parser.OFPBucket(bucket_id=self.group_table_id, actions=actions1, properties=None),
+                   parser.OFPBucket(bucket_id=self.group_table_id+1, actions=actions2, properties=None)]
 
         req = parser.OFPGroupMod(datapath, ofproto.OFPGC_ADD,
-                                 ofproto.OFPGT_SELECT, self.group_table_id, buckets)
+                                 ofproto.OFPGT_SELECT, self.group_table_id, command_bucket_id, buckets)
         datapath.send_msg(req)
 
