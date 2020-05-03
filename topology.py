@@ -8,6 +8,14 @@ from mininet.node import CPULimitedHost
 from mininet.node import OVSSwitch
 import os, sys
 import signal
+from requests import put
+import re
+import socket
+import fcntl
+import array
+import struct
+import sys
+
 
 REMOTE_CONTROLLER_IP = "127.0.0.1"
 
@@ -50,7 +58,7 @@ def sendTopology(net, agent, collector):
     for s in net.switches:
         topo['nodes'][s.name] = {'agent': agent, 'ports': {}}
     path = '/sys/devices/virtual/net/'
-    for child in listdir(path):
+    for child in os.listdir(path):
         parts = re.match('(^.+)-(.+)', child)
         if parts is None: continue
         if parts.group(1) in topo['nodes']:
