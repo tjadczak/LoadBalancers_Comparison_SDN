@@ -79,8 +79,8 @@ def sendTopology(net, agent, collector):
             j += 1
         i += 1
     print(topo)
-    for node in net.nodes:
-        print("node: {}, node name: {}".format(node, node.name))
+    for host in net.hosts:
+        print("host: {}, host name: {}".format(host, host.name))
     put('http://%s:8008/topology/json' % collector, json=topo)
 
 def main():
