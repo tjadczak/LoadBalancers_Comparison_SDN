@@ -88,7 +88,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         eventurl = rt + '/events/json?thresholdID=elephant&maxEvents=10&timeout=60'
         eventID = -1
         while True:
-            r = requests.get(eventurl + "&eventID=" + str(eventID), timeout=0.001)
+            try:
+                r = requests.get(eventurl + "&eventID=" + str(eventID), timeout=0.001)
+            except:
+                hub.sleep(1)
+                continue
             if r.status_code != 200: break
             events = r.json()
             if len(events) == 0:
@@ -99,7 +103,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             events.reverse()
             for e in events:
                 print("{}: Elephant flow detected {}".format(datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
-            hub.sleep(1)
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
