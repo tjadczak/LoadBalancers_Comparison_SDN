@@ -5,9 +5,9 @@ import json
 rt = 'http://127.0.0.1:8008'
 
 flowUdp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,udpsourceport,udpdestinationport','value':'bytes'}
-flowTcp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,tcpsourceport,tcpdestinationport','value':'bytes'}
+# flowTcp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,tcpsourceport,tcpdestinationport','value':'bytes'}
 requests.put(rt+'/flow/pair/json',data=json.dumps(flowUdp))
-#requests.put(rt+'/flow/pair/json',data=json.dumps(flowTcp))
+# requests.put(rt+'/flow/pair/json',data=json.dumps(flowTcp))
 
 threshold = {'metric':'pair','value':1,'byFlow':True,'timeout':1}
 requests.put(rt+'/threshold/elephant/json',data=json.dumps(threshold))
@@ -25,4 +25,4 @@ while 1 == 1:
   eventID = events[0]["eventID"]
   events.reverse()
   for e in events:
-    print e['flowKey']
+    print(e['flowKey'])
