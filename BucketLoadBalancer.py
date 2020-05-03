@@ -164,8 +164,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
         if etherFrame.ethertype == ether_types.ETH_TYPE_ARP:
-            self.logger.info("%s: Got Packet In: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
-                             "ETH_TYPE_ARP")
+            self.logger.info("%s: Got Packet In: %s from: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+                             "ETH_TYPE_ARP", pkt.get_protocol(arp.arp).src_ip)
             self.arp_response(dp, pkt, etherFrame, ofp_parser, ofp, in_port)
             return
         else:
