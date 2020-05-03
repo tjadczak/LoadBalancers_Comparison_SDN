@@ -64,27 +64,18 @@ def sendTopology(net, agent, collector):
         if parts.group(1) in topo['nodes']:
             ifindex = open(path + child + '/ifindex').read().split('\n', 1)[0]
             topo['nodes'][parts.group(1)]['ports'][child] = {'ifindex': ifindex}
-    i = 0
-    for s1 in net.switches:
-        j = 0
-        for s2 in net.switches:
-            if j > i:
-                intfs = s1.connectionsTo(s2)
-                for intf in intfs:
-                    s1ifIdx = topo['nodes'][s1.name]['ports'][intf[0].name]['ifindex']
-                    s2ifIdx = topo['nodes'][s2.name]['ports'][intf[1].name]['ifindex']
-                    linkName = '%s-%s' % (s1.name, s2.name)
-                    topo['links'][linkName] = {'node1': s1.name, 'port1': intf[0].name, 'node2': s2.name,
-                                               'port2': intf[1].name}
-            j += 1
-        i += 1
-    print(topo)
+
     for link in net.links:
-        print("link: {}".format(link))
-        print("switch name: {}".format(re.findall('^s[0-9]', str(link))[0]))
-        print("switch port: {}".format(re.findall('^s[0-9]-eth[0-9]', str(link))[0]))
-        print("host name: {}".format(re.findall('h[0-9]', str(link))[0]))
-        print("host port: {}".format(re.findall('h[0-9]-eth[0-9]', str(link))[0]))
+        switchName = re.findall('^s[0-9]', str(link))[0]
+        switchPort = re.findall('^s[0-9]-eth[0-9]', str(link))[0]
+        hostName = re.findall('h[0-9]', str(link))[0]
+        hostPort = re.findall('h[0-9]-eth[0-9]', str(link))[0]
+        linkName = "{}-{}".format(switchName, hostName)
+        topo['links'][linkName] = {'node1': switchName, 'port1': switchPort,
+                                   'node2': hostName, 'port2': hostPort}
+
+    print(topo)
+
     put('http://%s:8008/topology/json' % collector, json=topo)
 
 def main():
