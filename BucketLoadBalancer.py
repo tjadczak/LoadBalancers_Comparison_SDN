@@ -38,6 +38,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     H6_mac = "00:00:00:00:00:06"          # Host 6's mac
     H6_ip = "10.0.0.6"                    # Host 6's IP
     group_table_id = 50
+    rt = 'http://127.0.0.1:8008'
     current_server = ""  # Stores the current server's IP
     ip_to_port = {"10.0.0.1": 1,
                   "10.0.0.2": 2,
@@ -69,26 +70,24 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.datapaths = {}
         self.current_server = self.H5_ip
         self.SendElephantFlowMonitor()
-        # self.monitor_thread = hub.spawn(self.ElephantFlowMonitor())
+        self.monitor_thread = hub.spawn(self.ElephantFlowMonitor)
         self.logger.info("--------------------------------------------------------------")
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("--------------------------------------------------------------")
 
     def SendElephantFlowMonitor(self):
-        rt = 'http://127.0.0.1:8008'
-
         flowUdp = {'keys': 'link:inputifindex,ipsource,ipdestination,ipprotocol,udpsourceport,udpdestinationport',
                    'value': 'bytes'}
         # flowTcp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,tcpsourceport,tcpdestinationport','value':'bytes'}
-        requests.put(rt + '/flow/pair/json', data=json.dumps(flowUdp))
-        # requests.put(rt+'/flow/pair/json',data=json.dumps(flowTcp))
+        requests.put(self.rt + '/flow/pair/json', data=json.dumps(flowUdp))
+        # requests.put(self.rt+'/flow/pair/json',data=json.dumps(flowTcp))
 
         threshold = {'metric': 'pair', 'value': 1, 'byFlow': True, 'timeout': 1}
-        requests.put(rt + '/threshold/elephant/json', data=json.dumps(threshold))
+        requests.put(self.rt + '/threshold/elephant/json', data=json.dumps(threshold))
 
 
     def ElephantFlowMonitor(self):
-        eventurl = rt + '/events/json?thresholdID=elephant&maxEvents=10&timeout=60'
+        eventurl = self.rt + '/events/json?thresholdID=elephant&maxEvents=10&timeout=60'
         eventID = -1
         while True:
             try:
