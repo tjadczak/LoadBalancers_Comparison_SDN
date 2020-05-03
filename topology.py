@@ -99,7 +99,7 @@ def main():
     server_1.sendCmd("python -m SimpleHTTPServer 80 >& ./http_1.log &")
     server_2.sendCmd("python -m SimpleHTTPServer 80 >& ./http_2.log &")
     os.system("ovs-vsctl -- --id=@sflow create sflow agent=lo target=\"127.0.0.1\" sampling=1 polling=2 -- set bridge s1 sflow=@sflow")
-    collector = environ.get('COLLECTOR', '127.0.0.1')
+    collector = os.environ.get('COLLECTOR', '127.0.0.1')
     (ifname, agent) = getIfInfo(collector)
     sendTopology(net, agent, collector)
     CLI(net)
