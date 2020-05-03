@@ -68,12 +68,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
         self.datapaths = {}
         self.current_server = self.H5_ip
-        self.monitor_thread = hub.spawn(self.ElephantFlowMonitor())
+        self.SendElephantFlowMonitor()
+        # self.monitor_thread = hub.spawn(self.ElephantFlowMonitor())
         self.logger.info("--------------------------------------------------------------")
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("--------------------------------------------------------------")
 
-    def ElephantFlowMonitor(self):
+    def SendElephantFlowMonitor(self):
         rt = 'http://127.0.0.1:8008'
 
         flowUdp = {'keys': 'link:inputifindex,ipsource,ipdestination,ipprotocol,udpsourceport,udpdestinationport',
@@ -85,6 +86,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         threshold = {'metric': 'pair', 'value': 1, 'byFlow': True, 'timeout': 1}
         requests.put(rt + '/threshold/elephant/json', data=json.dumps(threshold))
 
+
+    def ElephantFlowMonitor(self):
         eventurl = rt + '/events/json?thresholdID=elephant&maxEvents=10&timeout=60'
         eventID = -1
         while True:
