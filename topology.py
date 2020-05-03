@@ -6,6 +6,8 @@ from mininet.node import RemoteController
 from mininet.link import TCLink
 from mininet.node import CPULimitedHost
 from mininet.node import OVSSwitch
+import os
+import signal
 
 REMOTE_CONTROLLER_IP = "127.0.0.1"
 
@@ -34,6 +36,7 @@ def main():
     net.start()
     server_1.sendCmd("python -m SimpleHTTPServer 80 >& ./http_1.log &")
     server_2.sendCmd("python -m SimpleHTTPServer 80 >& ./http_2.log &")
+    os.system("ovs-vsctl -- --id=@sflow create sflow agent=lo target=\"127.0.0.1\" sampling=1 polling=2 -- set bridge s1 sflow=@sflow")
     CLI(net)
     net.stop()
 
