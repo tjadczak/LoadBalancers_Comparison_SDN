@@ -81,10 +81,10 @@ def sendTopology(net, agent, collector):
     print(topo)
     for link in net.links:
         print("link: {}".format(link))
-        print("switch name: {}".format(re.match('^s[0-9]', str(link))))
-        print("switch port: {}".format(re.match('^s[0-9]-eth[0-9]', str(link))))
+        print("switch name: {}".format(re.match('^s[0-9]', str(link)).group(1)))
+        print("switch port: {}".format(re.match('^s[0-9]-eth[0-9]', str(link)).group(1)))
         #print("host name: {}".format(re.match('^h[0-9]', link)))
-        print("host port: {}".format(re.match('h[0-9]-eth[0-9]', str(link))))
+        print("host port: {}".format(re.match('h[0-9]-eth[0-9]', str(link)).group(1)))
     put('http://%s:8008/topology/json' % collector, json=topo)
 
 def main():
