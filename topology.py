@@ -80,7 +80,7 @@ def sendTopology(net, agent, collector):
         i += 1
     print(topo)
     for link in net.links:
-        print("link: {}, link name: {}".format(link, link.name))
+        print("link: {}".format(link))
     put('http://%s:8008/topology/json' % collector, json=topo)
 
 def main():
