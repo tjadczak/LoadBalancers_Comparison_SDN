@@ -91,14 +91,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         eventID = -1
         while True:
             try:
-                r = requests.get(eventurl + "&eventID=" + str(eventID), timeout=0.001)
+                r = requests.get(eventurl + "&eventID=" + str(eventID), timeout=0.005)
             except:
-                hub.sleep(1)
+                hub.sleep(0.5)
                 continue
             if r.status_code != 200: break
             events = r.json()
             if len(events) == 0:
-                # print("Length of events = 0, continuing")
                 continue
 
             eventID = events[0]["eventID"]
