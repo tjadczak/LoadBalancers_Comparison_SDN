@@ -6,7 +6,7 @@ from mininet.node import RemoteController
 from mininet.link import TCLink
 from mininet.node import CPULimitedHost
 from mininet.node import OVSSwitch
-import os
+import os, sys
 import signal
 
 REMOTE_CONTROLLER_IP = "127.0.0.1"
