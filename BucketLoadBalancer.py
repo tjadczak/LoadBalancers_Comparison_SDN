@@ -15,6 +15,7 @@ from ryu.lib import hub
 import datetime
 import requests
 import json
+import re
 
 
 """ 
@@ -102,7 +103,33 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             eventID = events[0]["eventID"]
             events.reverse()
             for e in events:
-                print("{}: Elephant flow ( 1Mbps ) detected {}".format(datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
+                self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
+
+                datapath = self.datapaths[1]
+                priority = 1
+
+                in_port = 0 # wyjac
+                eth_type = ether_types.ETH_TYPE_IP
+                eth_dst = 0 # wyjac z wiadomosci
+                [ipv4_src, ipv4_dst] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
+                ip_proto = 0x06  # wyjac z wiadomosci
+                tcp_port = 0 # wyjac z wiadomosci
+                parser = datapath.ofproto_parser
+                print(ipv4_src, ipv4_dst)
+                # Elephant flow ( 1Mbps ) detected s1-h5,10.0.0.5,10.0.0.2,6,80,44714
+                match = parser.OFPMatch(
+                    in_port=in_port,
+                    eth_type=eth_type,
+                    eth_dst=eth_dst,
+                    ipv4_src=ipv4_src,
+                    ipv4_dst=ipv4_dst,
+                    ip_proto=ip_proto,
+                    tcp_src=tcp_port)
+                actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+                           parser.OFPActionOutput(host)]
+                self.add_flow(datapath, priority, match, actions)
+
+
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
