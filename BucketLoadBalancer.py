@@ -141,7 +141,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ip_proto=ip_proto,
                     tcp_dst=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_dst=server_ip),
-                           parser.OFPActionOutput(self.ip_to_port[ipv4_dst])]
+                           parser.OFPActionOutput(self.ip_to_port[host_ip])]
                 self.add_flow(datapath, priority, match, actions)
 
 
