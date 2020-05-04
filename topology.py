@@ -74,11 +74,7 @@ def sendTopology(net, agent, collector):
         topo['links'][linkName] = {'node1': switchName, 'port1': switchPort,
                                    'node2': hostName, 'port2': hostPort}
         
-        #linkName = "{}-{}".format(hostName, switchName)
-        #topo['links'][linkName] = {'node1': hostName, 'port1': hostPort,
-        #                           'node2': switchName, 'port2': switchPort}
-
-    print(topo)
+    # print(topo)
 
     put('http://%s:8008/topology/json' % collector, json=topo)
 
@@ -93,21 +89,21 @@ def main():
     host_2 = net.addHost('h2')
     host_3 = net.addHost('h3')
     host_4 = net.addHost('h4')
-    server_1 = net.addHost('h5', cpu=0.5)
-    server_2 = net.addHost('h6', cpu=0.5)
+    server_1 = net.addHost('h5', cpu=0.1)
+    server_2 = net.addHost('h6', cpu=0.1)
     switch = net.addSwitch('s1', cls=OVSSwitch, protocols='OpenFlow15')
 
     net.addLink(switch, host_1, bw=10, delay='50ms')
-    net.addLink(switch, host_2, bw=10, delay='50ms')
-    net.addLink(switch, host_3, bw=10, delay='50ms')
-    net.addLink(switch, host_4, bw=10, delay='50ms')
+    net.addLink(switch, host_2, bw=10, delay='100ms')
+    net.addLink(switch, host_3, bw=10, delay='150ms')
+    net.addLink(switch, host_4, bw=10, delay='200ms')
     net.addLink(switch, server_1, bw=10, delay='50ms')
     net.addLink(switch, server_2, bw=10, delay='50ms')
 
     net.start()
     server_1.sendCmd("python -m SimpleHTTPServer 80 >& ./http_1.log &")
     server_2.sendCmd("python -m SimpleHTTPServer 80 >& ./http_2.log &")
-    os.system("ovs-vsctl -- --id=@sflow create sflow agent=lo target=\"127.0.0.1\" sampling=1 polling=2 -- set bridge s1 sflow=@sflow")
+    os.system("ovs-vsctl -- --id=@sflow create sflow agent=lo target=\"127.0.0.1\" sampling=16 polling=10 -- set bridge s1 sflow=@sflow")
     collector = os.environ.get('COLLECTOR', '127.0.0.1')
     (ifname, agent) = getIfInfo(collector)
     sendTopology(net, agent, collector)

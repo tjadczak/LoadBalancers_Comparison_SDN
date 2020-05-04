@@ -76,13 +76,12 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.logger.info("--------------------------------------------------------------")
 
     def SendElephantFlowMonitor(self):
-        flowUdp = {'keys': 'link:outputifindex,ipsource,ipdestination,ipprotocol,udpsourceport,udpdestinationport',
-                   'value': 'bytes'}
-        # flowTcp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,tcpsourceport,tcpdestinationport','value':'bytes'}
-        requests.put(self.rt + '/flow/pair/json', data=json.dumps(flowUdp))
-        # requests.put(self.rt+'/flow/pair/json',data=json.dumps(flowTcp))
+        #flowUdp = {'keys': 'link:outputifindex,ipsource,ipdestination,ipprotocol,udpsourceport,udpdestinationport','value': 'bytes'}
+        flowTcp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,tcpsourceport,tcpdestinationport','value':'bytes'}
+        #requests.put(self.rt + '/flow/pair/json', data=json.dumps(flowUdp))
+        requests.put(self.rt+'/flow/pair/json',data=json.dumps(flowTcp))
 
-        threshold = {'metric': 'pair', 'value': 1, 'byFlow': True, 'timeout': 1}
+        threshold = {'metric': 'pair', 'value': 1000000/8, 'byFlow': True, 'timeout': 1}
         requests.put(self.rt + '/threshold/elephant/json', data=json.dumps(threshold))
 
 
@@ -91,9 +90,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         eventID = -1
         while True:
             try:
-                r = requests.get(eventurl + "&eventID=" + str(eventID), timeout=0.005)
+                r = requests.get(eventurl + "&eventID=" + str(eventID), timeout=0.01)
             except:
-                hub.sleep(0.5)
+                hub.sleep(1)
                 continue
             if r.status_code != 200: break
             events = r.json()
@@ -103,7 +102,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             eventID = events[0]["eventID"]
             events.reverse()
             for e in events:
-                print("{}: Elephant flow detected {}".format(datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
+                print("{}: Elephant flow ( 1Mbps ) detected {}".format(datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
@@ -163,8 +162,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
         if etherFrame.ethertype == ether_types.ETH_TYPE_ARP:
-            self.logger.info("%s: Got Packet In: %s from: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
-                             "ETH_TYPE_ARP", pkt.get_protocol(arp.arp).src_ip)
+            #self.logger.info("%s: Got Packet In: %s from: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+            #                 "ETH_TYPE_ARP", pkt.get_protocol(arp.arp).src_ip)
             self.arp_response(dp, pkt, etherFrame, ofp_parser, ofp, in_port)
             return
         else:
@@ -187,10 +186,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # to the target host's IP.
         if dstIp != self.H5_ip and dstIp != self.H6_ip:
             srcMac = self.ip_to_mac[self.current_server]
-            self.logger.info("%s: Sending ARP reply to HOST", datetime.datetime.now().strftime('%H:%M:%S.%f'))
+            #self.logger.info("%s: Sending ARP reply to HOST", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         else:
             srcMac = self.ip_to_mac[srcIp]
-            self.logger.info("%s: Sending ARP reply to SERVER", datetime.datetime.now().strftime('%H:%M:%S.%f'))
+            #self.logger.info("%s: Sending ARP reply to SERVER", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
         e = ethernet.ethernet(dstMac, srcMac, ether_types.ETH_TYPE_ARP)
         a = arp.arp(1, 0x0800, 6, 4, 2, srcMac, srcIp, dstMac, dstIp)
@@ -206,13 +205,12 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         out = ofp_parser.OFPPacketOut(
             datapath=datapath,
             buffer_id=ofp.OFP_NO_BUFFER,
-            #in_port=in_port,
             match=match,
             actions=actions,
             data=p.data
         )
         datapath.send_msg(out)  # Send out ARP reply
-        self.logger.info("%s: ARP reply send", datetime.datetime.now().strftime('%H:%M:%S.%f'))
+        #self.logger.info("%s: ARP reply send", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
     # Sets up the flow table in the switch to map IP addresses correctly.
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
@@ -234,14 +232,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        #LB_WEIGHT1 = 50  # percentage
-        #LB_WEIGHT2 = 50  # percentage
-
-        #watch_port = 0
-        #watch_port = ofproto_v1_5.OFPP_ANY
-        #watch_group = 0
-        #watch_group = ofproto_v1_5.OFPQ_ALL
-
         actions1 = [parser.OFPActionSetField(ipv4_dst=self.H5_ip),
                     parser.OFPActionSetField(eth_dst=self.H5_mac),
                     parser.OFPActionOutput(self.ip_to_port[self.H5_ip])]
@@ -251,10 +241,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         
         command_bucket_id=ofproto.OFPG_BUCKET_ALL
         
-        #buckets = [parser.OFPBucket(LB_WEIGHT1, watch_port, watch_group, actions1),
-        #           parser.OFPBucket(LB_WEIGHT2, watch_port, watch_group, actions2)]
-        buckets = [parser.OFPBucket(bucket_id=self.group_table_id, actions=actions1, properties=None),
-                   parser.OFPBucket(bucket_id=self.group_table_id+1, actions=actions2, properties=None)]
+        buckets = [parser.OFPBucket(bucket_id=1, actions=actions1, properties=None),
+                   parser.OFPBucket(bucket_id=2, actions=actions2, properties=None)]
 
         req = parser.OFPGroupMod(datapath, ofproto.OFPGC_ADD,
                                  ofproto.OFPGT_SELECT, self.group_table_id, command_bucket_id, buckets)
