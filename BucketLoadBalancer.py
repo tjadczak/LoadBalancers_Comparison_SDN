@@ -91,9 +91,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         eventurl = self.rt + '/events/json?thresholdID=elephant&maxEvents=10&timeout=60'
         eventID = -1
         while True:
-            if not self.datapaths[1]:
-                hub.sleep(1)
-                continue
             try:
                 r = requests.get(eventurl + "&eventID=" + str(eventID), timeout=0.01)
             except:
@@ -109,15 +106,17 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             for e in events:
                 self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
-
-                datapath = self.datapaths[1]
+                try:
+                    datapath = self.datapaths[1]
+                except:
+                    continue
                 priority = 20
 
                 [server_ip, host_ip] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
-                if host_ip in self.elephant_flows:
+                if host_ip in self.elephant_flows.keys():
                     continue
                 else:
-                    self.elephant_flows.append(host_ip)
+                    self.elephant_flows[host_ip] = 1
                 in_port = self.ip_to_port[server_ip]
                 eth_type = ether_types.ETH_TYPE_IP
                 eth_src = self.ip_to_mac[server_ip]
