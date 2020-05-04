@@ -108,23 +108,39 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 datapath = self.datapaths[1]
                 priority = 20
 
-                [ipv4_src, ipv4_dst] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
-                in_port = self.ip_to_port[ipv4_src]
+                [server_ip, host_ip] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
+                in_port = self.ip_to_port[server_ip]
                 eth_type = ether_types.ETH_TYPE_IP
-                eth_dst = self.ip_to_mac[ipv4_dst]
+                eth_src = self.ip_to_mac[server_ip]
                 ip_proto = 0x06
                 tcp_port = 80
                 parser = datapath.ofproto_parser
+
                 # Elephant flow ( 1Mbps ) detected s1-h5,10.0.0.5,10.0.0.2,6,80,44714
+                # Flow from server to host
                 match = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
-                    eth_dst=eth_dst,
-                    ipv4_src=ipv4_src,
-                    ipv4_dst=ipv4_dst,
+                    #eth_dst=eth_dst,
+                    ipv4_src=server_ip,
+                    ipv4_dst=host_ip,
                     ip_proto=ip_proto,
                     tcp_src=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+                           parser.OFPActionOutput(self.ip_to_port[host_ip])]
+                self.add_flow(datapath, priority, match, actions)
+
+                # Reverse flow host to server
+                in_port = self.ip_to_port[ipv4_dst]
+                match = parser.OFPMatch(
+                    in_port=in_port,
+                    eth_type=eth_type,
+                    #eth_dst=eth_src,
+                    ipv4_src=host_ip,
+                    ipv4_dst=self.virtual_ip,
+                    ip_proto=ip_proto,
+                    tcp_dst=tcp_port)
+                actions = [parser.OFPActionSetField(ipv4_dst=server_ip),
                            parser.OFPActionOutput(self.ip_to_port[ipv4_dst])]
                 self.add_flow(datapath, priority, match, actions)
 
