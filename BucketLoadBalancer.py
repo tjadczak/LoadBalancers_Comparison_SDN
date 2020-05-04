@@ -106,7 +106,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
 
                 datapath = self.datapaths[1]
-                priority = 1
+                priority = 20
 
                 [ipv4_src, ipv4_dst] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
                 in_port = self.ip_to_port[ipv4_src]
