@@ -109,7 +109,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 priority = 1
 
                 [ipv4_src, ipv4_dst] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
-                in_port = self.ip_to_mac[ipv4_src]
+                in_port = self.ip_to_port[ipv4_src]
                 eth_type = ether_types.ETH_TYPE_IP
                 eth_dst = self.ip_to_mac[ipv4_dst]
                 ip_proto = 0x06
