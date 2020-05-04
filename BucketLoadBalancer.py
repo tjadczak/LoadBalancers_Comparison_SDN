@@ -108,14 +108,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 datapath = self.datapaths[1]
                 priority = 1
 
-                in_port = 0 # wyjac
-                eth_type = ether_types.ETH_TYPE_IP
-                eth_dst = 0 # wyjac z wiadomosci
                 [ipv4_src, ipv4_dst] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
-                ip_proto = 0x06  # wyjac z wiadomosci
-                tcp_port = 0 # wyjac z wiadomosci
+                in_port = self.ip_to_mac[ipv4_src]
+                eth_type = ether_types.ETH_TYPE_IP
+                eth_dst = self.ip_to_mac[ipv4_dst]
+                ip_proto = 0x06
+                tcp_port = 80
                 parser = datapath.ofproto_parser
-                print(ipv4_src, ipv4_dst)
                 # Elephant flow ( 1Mbps ) detected s1-h5,10.0.0.5,10.0.0.2,6,80,44714
                 match = parser.OFPMatch(
                     in_port=in_port,
@@ -126,7 +125,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ip_proto=ip_proto,
                     tcp_src=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
-                           parser.OFPActionOutput(host)]
+                           parser.OFPActionOutput(self.ip_to_port[ipv4_dst])]
                 self.add_flow(datapath, priority, match, actions)
 
 
