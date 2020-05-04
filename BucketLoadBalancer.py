@@ -69,6 +69,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
         self.datapaths = {}
+        self.elephant_flows = {}
         self.current_server = self.H5_ip
         self.SendElephantFlowMonitor()
         self.monitor_thread = hub.spawn(self.ElephantFlowMonitor)
@@ -90,6 +91,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         eventurl = self.rt + '/events/json?thresholdID=elephant&maxEvents=10&timeout=60'
         eventID = -1
         while True:
+            if not self.datapaths[1]:
+                hub.sleep(1)
+                continue
             try:
                 r = requests.get(eventurl + "&eventID=" + str(eventID), timeout=0.01)
             except:
@@ -103,12 +107,17 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             eventID = events[0]["eventID"]
             events.reverse()
             for e in events:
-                self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
+                self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
+                    datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
 
                 datapath = self.datapaths[1]
                 priority = 20
 
                 [server_ip, host_ip] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
+                if host_ip in self.elephant_flows:
+                    continue
+                else:
+                    self.elephant_flows.append(host_ip)
                 in_port = self.ip_to_port[server_ip]
                 eth_type = ether_types.ETH_TYPE_IP
                 eth_src = self.ip_to_mac[server_ip]
@@ -144,6 +153,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                            parser.OFPActionOutput(self.ip_to_port[server_ip])]
                 self.add_flow(datapath, priority, match, actions)
 
+                self.logger.info("{}: Instaled new flows for elephant flow".format(
+                    datetime.datetime.now().strftime('%H:%M:%S.%f')))
 
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
