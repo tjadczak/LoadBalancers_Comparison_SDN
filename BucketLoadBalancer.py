@@ -131,7 +131,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 self.add_flow(datapath, priority, match, actions)
 
                 # Reverse flow host to server
-                in_port = self.ip_to_port[ipv4_dst]
+                in_port = self.ip_to_port[host_ip]
                 match = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
