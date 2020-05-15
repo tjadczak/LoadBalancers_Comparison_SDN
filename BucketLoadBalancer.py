@@ -117,9 +117,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     continue
                 else:
                     self.elephant_flows[host_ip] = 1
+
+                server_ip="10.0.0.5"
+                self.logger.info("{}: Elephant flow redirecting to: {}".format(
+                    datetime.datetime.now().strftime('%H:%M:%S.%f'), server_ip))
+
                 in_port = self.ip_to_port[server_ip]
                 eth_type = ether_types.ETH_TYPE_IP
-                eth_src = self.ip_to_mac[server_ip]
                 ip_proto = 0x06
                 tcp_port = 80
                 parser = datapath.ofproto_parser
@@ -129,7 +133,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
-                    #eth_dst=eth_dst,
                     ipv4_src=server_ip,
                     ipv4_dst=host_ip,
                     ip_proto=ip_proto,
