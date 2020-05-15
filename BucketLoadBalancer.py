@@ -140,17 +140,27 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
                 # Reverse flow host to server
                 in_port = self.ip_to_port[host_ip]
-                match = parser.OFPMatch(
+                match1 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
-                    #eth_dst=eth_src,
+                    eth_dst=self.ip_to_mac["10.0.0.5"],
+                    ipv4_src=host_ip,
+                    ipv4_dst=self.virtual_ip,
+                    ip_proto=ip_proto,
+                    tcp_dst=tcp_port)
+                match2 = parser.OFPMatch(
+                    in_port=in_port,
+                    eth_type=eth_type,
+                    eth_dst=self.ip_to_mac["10.0.0.6"],
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
                     tcp_dst=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_dst=server_ip),
+                           parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                            parser.OFPActionOutput(self.ip_to_port[server_ip])]
-                self.add_flow(datapath, priority, match, actions)
+                self.add_flow(datapath, priority, match1, actions)
+                self.add_flow(datapath, priority, match2, actions)
 
                 self.logger.info("{}: Instaled new flows for elephant flow".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f')))
