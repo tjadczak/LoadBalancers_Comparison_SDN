@@ -100,7 +100,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
         self.datapaths = {}
         self.elephant_flows = {}
-        self.current_server = self.H5_ip
+        self.current_server = self.H11_ip
         self.SendElephantFlowMonitor()
         self.monitor_thread = hub.spawn(self.ElephantFlowMonitor)
         self.logger.info("--------------------------------------------------------------")
