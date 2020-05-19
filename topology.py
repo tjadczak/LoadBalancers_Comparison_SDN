@@ -67,10 +67,10 @@ def sendTopology(net, agent, collector):
             topo['nodes'][parts.group(1)]['ports'][child] = {'ifindex': ifindex}
 
     for link in net.links:
-        switchName = re.findall('^s[0-9]', str(link))[0]
-        switchPort = re.findall('^s[0-9]-eth[0-9]', str(link))[0]
-        hostName = re.findall('h[0-9]', str(link))[0]
-        hostPort = re.findall('h[0-9]-eth[0-9]', str(link))[0]
+        switchName = re.findall('^s\d{1,2}', str(link))[0]
+        switchPort = re.findall('^s\d{1,2}-eth\d{1,2}', str(link))[0]
+        hostName = re.findall('h\d{1,2}', str(link))[0]
+        hostPort = re.findall('h\d{1,2}-eth\d{1,2}', str(link))[0]
         linkName = "{}-{}".format(switchName, hostName)
         topo['links'][linkName] = {'node1': switchName, 'port1': switchPort,
                                    'node2': hostName, 'port2': hostPort}
