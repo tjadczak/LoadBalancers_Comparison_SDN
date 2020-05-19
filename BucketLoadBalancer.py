@@ -32,12 +32,14 @@ import re
 
 class SimpleLoadBalancer(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_5.OFP_VERSION]
-    virtual_ip = "10.0.0.10"  # The virtual server IP
+    virtual_ip = "10.0.0.100"  # The virtual server IP
     # Hosts 5 and 6 are servers.
-    H5_mac = "00:00:00:00:00:05"          # Host 5's mac
-    H5_ip = "10.0.0.5"                    # Host 5's IP
-    H6_mac = "00:00:00:00:00:06"          # Host 6's mac
-    H6_ip = "10.0.0.6"                    # Host 6's IP
+    H11_mac = "00:00:00:00:00:0B"          # Host 5's mac
+    H11_ip = "10.0.0.11"                    # Host 5's IP
+    H12_mac = "00:00:00:00:00:0C"          # Host 6's mac
+    H12_ip = "10.0.0.12"                    # Host 6's IP
+    H13_mac = "00:00:00:00:00:0D"  # Host 6's mac
+    H13_ip = "10.0.0.13"  # Host 6's IP
     group_table_id = 50
     rt = 'http://127.0.0.1:8008'
     current_server = ""  # Stores the current server's IP
@@ -46,25 +48,53 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                   "10.0.0.3": 3,
                   "10.0.0.4": 4,
                   "10.0.0.5": 5,
-                  "10.0.0.6": 6}
+                  "10.0.0.6": 6,
+                  "10.0.0.7": 7,
+                  "10.0.0.8": 8,
+                  "10.0.0.9": 9,
+                  "10.0.0.10": 10,
+                  "10.0.0.11": 11,
+                  "10.0.0.12": 12,
+                  "10.0.0.13": 13}
     ip_to_mac = {"10.0.0.1": "00:00:00:00:00:01",
                  "10.0.0.2": "00:00:00:00:00:02",
                  "10.0.0.3": "00:00:00:00:00:03",
                  "10.0.0.4": "00:00:00:00:00:04",
                  "10.0.0.5": "00:00:00:00:00:05",
-                 "10.0.0.6": "00:00:00:00:00:06"}
+                 "10.0.0.6": "00:00:00:00:00:06",
+                 "10.0.0.7": "00:00:00:00:00:07",
+                 "10.0.0.8": "00:00:00:00:00:08",
+                 "10.0.0.9": "00:00:00:00:00:09",
+                 "10.0.0.10": "00:00:00:00:00:0A",
+                 "10.0.0.11": "00:00:00:00:00:0B",
+                 "10.0.0.12": "00:00:00:00:00:0C",
+                 "10.0.0.13": "00:00:00:00:00:0D"}
     port_to_mac = {1: "00:00:00:00:00:01",
                    2: "00:00:00:00:00:02",
                    3: "00:00:00:00:00:03",
                    4: "00:00:00:00:00:04",
                    5: "00:00:00:00:00:05",
-                   6: "00:00:00:00:00:06"}
+                   6: "00:00:00:00:00:06",
+                   7: "00:00:00:00:00:07",
+                   8: "00:00:00:00:00:08",
+                   9: "00:00:00:00:00:09",
+                   10: "00:00:00:00:00:0A",
+                   11: "00:00:00:00:00:0B",
+                   12: "00:00:00:00:00:0C",
+                   13: "00:00:00:00:00:0D"}
     port_to_ip = { 1: "10.0.0.1",
                    2: "10.0.0.2",
                    3: "10.0.0.3",
                    4: "10.0.0.4",
                    5: "10.0.0.5",
-                   6: "10.0.0.6"}
+                   6: "10.0.0.6",
+                   7: "10.0.0.7",
+                   8: "10.0.0.8",
+                   9: "10.0.0.9",
+                   10: "10.0.0.10",
+                   11: "10.0.0.11",
+                   12: "10.0.0.12",
+                   13: "10.0.0.13"}
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
@@ -118,7 +148,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 else:
                     self.elephant_flows[host_ip] = 1
 
-                server_ip="10.0.0.5"
+                server_ip="10.0.0.11"
                 self.logger.info("{}: Elephant flow redirecting to: {}".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f'), server_ip))
 
@@ -146,7 +176,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match1 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
-                    eth_dst=self.ip_to_mac["10.0.0.5"],
+                    eth_dst=self.ip_to_mac["10.0.0.11"],
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
@@ -154,7 +184,15 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match2 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
-                    eth_dst=self.ip_to_mac["10.0.0.6"],
+                    eth_dst=self.ip_to_mac["10.0.0.12"],
+                    ipv4_src=host_ip,
+                    ipv4_dst=self.virtual_ip,
+                    ip_proto=ip_proto,
+                    tcp_dst=tcp_port)
+                match3 = parser.OFPMatch(
+                    in_port=in_port,
+                    eth_type=eth_type,
+                    eth_dst=self.ip_to_mac["10.0.0.13"],
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
@@ -195,14 +233,14 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.add_flow(datapath, 0, match, actions)
 
         self.send_group_mod(datapath)
-        for host in range(1, 5):
+        for host in range(1, 11):
             match = parser.OFPMatch(
                 in_port=host,
                 eth_type=ether_types.ETH_TYPE_IP)
             actions = [parser.OFPActionGroup(group_id=self.group_table_id)]
             self.add_flow(datapath, 10, match, actions)
 
-            for server in range(5,7):
+            for server in range(11,14):
                 match = parser.OFPMatch(
                     in_port=server,
                     eth_type=ether_types.ETH_TYPE_IP,
@@ -249,7 +287,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # choose the target/source MAC address from one of the servers;
         # else the target MAC address is set to the one corresponding
         # to the target host's IP.
-        if dstIp != self.H5_ip and dstIp != self.H6_ip:
+        if dstIp != self.H11_ip and dstIp != self.H12_ip and dstIp != self.H13_ip:
             srcMac = self.ip_to_mac[self.current_server]
             #self.logger.info("%s: Sending ARP reply to HOST", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         else:
@@ -297,17 +335,21 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        actions1 = [parser.OFPActionSetField(ipv4_dst=self.H5_ip),
-                    parser.OFPActionSetField(eth_dst=self.H5_mac),
-                    parser.OFPActionOutput(self.ip_to_port[self.H5_ip])]
-        actions2 = [parser.OFPActionSetField(ipv4_dst=self.H6_ip),
-                    parser.OFPActionSetField(eth_dst=self.H6_mac),
-                    parser.OFPActionOutput(self.ip_to_port[self.H6_ip])]
-        
+        actions1 = [parser.OFPActionSetField(ipv4_dst=self.H11_ip),
+                    parser.OFPActionSetField(eth_dst=self.H11_mac),
+                    parser.OFPActionOutput(self.ip_to_port[self.H11_ip])]
+        actions2 = [parser.OFPActionSetField(ipv4_dst=self.H12_ip),
+                    parser.OFPActionSetField(eth_dst=self.H12_mac),
+                    parser.OFPActionOutput(self.ip_to_port[self.H12_ip])]
+        actions3 = [parser.OFPActionSetField(ipv4_dst=self.H13_ip),
+                    parser.OFPActionSetField(eth_dst=self.H13_mac),
+                    parser.OFPActionOutput(self.ip_to_port[self.H13_ip])]
+
         command_bucket_id=ofproto.OFPG_BUCKET_ALL
         
         buckets = [parser.OFPBucket(bucket_id=1, actions=actions1, properties=None),
-                   parser.OFPBucket(bucket_id=2, actions=actions2, properties=None)]
+                   parser.OFPBucket(bucket_id=2, actions=actions2, properties=None),
+                   parser.OFPBucket(bucket_id=3, actions=actions3, properties=None)]
 
         req = parser.OFPGroupMod(datapath, ofproto.OFPGC_ADD,
                                  ofproto.OFPGT_SELECT, self.group_table_id, command_bucket_id, buckets)
