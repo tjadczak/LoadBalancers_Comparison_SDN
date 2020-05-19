@@ -15,6 +15,7 @@ import fcntl
 import array
 import struct
 import sys
+import time
 
 
 REMOTE_CONTROLLER_IP = "127.0.0.1"
@@ -101,10 +102,14 @@ def main():
     net.addLink(switch, server_2, bw=10, delay='50ms')
 
     net.start()
-    server_1.sendCmd("python -m SimpleHTTPServer 80 >& ./http_1.log &")
-    server_2.sendCmd("python -m SimpleHTTPServer 80 >& ./http_2.log &")
-    #server_1.sendCmd("python -m SimpleHTTPServer 3000 >& ./http_1.log &")
-    #server_2.sendCmd("python -m SimpleHTTPServer 3000 >& ./http_2.log &")
+    #server_1.sendCmd("python -m SimpleHTTPServer 80 &; python -m SimpleHTTPServer 3000 &")
+    #server_2.sendCmd("python -m SimpleHTTPServer 80 &; python -m SimpleHTTPServer 3000 &")
+    server_1.sendCmd("nohup python -m SimpleHTTPServer 80 &")
+    server_2.sendCmd("nohup python -m SimpleHTTPServer 80 &")
+    server_1.waitOutput()
+    server_2.waitOutput()
+    server_1.sendCmd("nohup python -m SimpleHTTPServer 3000 &")
+    server_2.sendCmd("nohup python -m SimpleHTTPServer 3000 &")
     os.system("ovs-vsctl -- --id=@sflow create sflow agent=lo target=\"127.0.0.1\" sampling=16 polling=10 -- set bridge s1 sflow=@sflow")
     collector = os.environ.get('COLLECTOR', '127.0.0.1')
     (ifname, agent) = getIfInfo(collector)
