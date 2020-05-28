@@ -16,6 +16,7 @@ import datetime
 import requests
 import json
 import re
+import random
 
 
 """ 
@@ -29,7 +30,6 @@ import re
             h4 --- *
 """
 
-
 class SimpleLoadBalancer(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_5.OFP_VERSION]
     virtual_ip = "10.0.0.100"  # The virtual server IP
@@ -42,7 +42,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     H13_ip = "10.0.0.13"  # Host 6's IP
     group_table_id = 50
     rt = 'http://127.0.0.1:8008'
-    current_server = ""  # Stores the current server's IP
     ip_to_port = {"10.0.0.1": 1,
                   "10.0.0.2": 2,
                   "10.0.0.3": 3,
@@ -95,12 +94,12 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    11: "10.0.0.11",
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
+    loadBalancingAlgorithm = "random" # 'random' / 'roundRobin' / 'leastBandwidth'
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
         self.datapaths = {}
         self.elephant_flows = {}
-        self.current_server = self.H11_ip
         self.SendElephantFlowMonitor()
         self.monitor_thread = hub.spawn(self.ElephantFlowMonitor)
         self.logger.info("--------------------------------------------------------------")
@@ -108,9 +107,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.logger.info("--------------------------------------------------------------")
 
     def SendElephantFlowMonitor(self):
-        #flowUdp = {'keys': 'link:outputifindex,ipsource,ipdestination,ipprotocol,udpsourceport,udpdestinationport','value': 'bytes'}
         flowTcp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,tcpsourceport,tcpdestinationport','value':'bytes'}
-        #requests.put(self.rt + '/flow/pair/json', data=json.dumps(flowUdp))
         requests.put(self.rt+'/flow/pair/json',data=json.dumps(flowTcp))
 
         threshold = {'metric': 'pair', 'value': 1000000/8, 'byFlow': True, 'timeout': 1}
@@ -134,8 +131,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             eventID = events[0]["eventID"]
             events.reverse()
             for e in events:
-                self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
-                    datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
                 try:
                     datapath = self.datapaths[1]
                 except:
@@ -146,9 +141,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 if host_ip in self.elephant_flows.keys():
                     continue
                 else:
+                    self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
+                        datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
                     self.elephant_flows[host_ip] = 1
 
-                server_ip="10.0.0.11"
+                # server_ip = H11_ip
+                server_ip = getServerIp(self.loadBalancingAlgorithm)
+
                 self.logger.info("{}: Elephant flow redirecting to: {}".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f'), server_ip))
 
@@ -176,7 +175,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match1 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
-                    eth_dst=self.ip_to_mac["10.0.0.11"],
+                    eth_dst=self.ip_to_mac[self.H11_ip],
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
@@ -184,7 +183,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match2 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
-                    eth_dst=self.ip_to_mac["10.0.0.12"],
+                    eth_dst=self.ip_to_mac[self.H12_ip],
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
@@ -192,7 +191,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match3 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
-                    eth_dst=self.ip_to_mac["10.0.0.13"],
+                    eth_dst=self.ip_to_mac[self.H13_ip],
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
@@ -202,6 +201,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                            parser.OFPActionOutput(self.ip_to_port[server_ip])]
                 self.add_flow(datapath, priority, match1, actions)
                 self.add_flow(datapath, priority, match2, actions)
+                self.add_flow(datapath, priority, match3, actions)
 
                 self.logger.info("{}: Instaled new flows for elephant flow".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f')))
@@ -265,8 +265,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
         if etherFrame.ethertype == ether_types.ETH_TYPE_ARP:
-            #self.logger.info("%s: Got Packet In: %s from: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
-            #                 "ETH_TYPE_ARP", pkt.get_protocol(arp.arp).src_ip)
             self.arp_response(dp, pkt, etherFrame, ofp_parser, ofp, in_port)
             return
         else:
@@ -288,7 +286,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # else the target MAC address is set to the one corresponding
         # to the target host's IP.
         if dstIp != self.H11_ip and dstIp != self.H12_ip and dstIp != self.H13_ip:
-            srcMac = self.ip_to_mac[self.current_server]
+            srcMac = self.ip_to_mac[self.H11_ip]
             #self.logger.info("%s: Sending ARP reply to HOST", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         else:
             srcMac = self.ip_to_mac[srcIp]
@@ -354,4 +352,28 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         req = parser.OFPGroupMod(datapath, ofproto.OFPGC_ADD,
                                  ofproto.OFPGT_SELECT, self.group_table_id, command_bucket_id, buckets)
         datapath.send_msg(req)
+
+
+previousServer = "10.0.0.13"
+def getServerIp(loadBalancingAlgorithm):
+    global previousServer
+
+    if loadBalancingAlgorithm == 'random':
+        return random.choice(["10.0.0.11", "10.0.0.12", "10.0.0.13"])
+
+    elif loadBalancingAlgorithm == 'roundRobin':
+        if previousServer == "10.0.0.11":
+            previousServer = "10.0.0.12"
+            return "10.0.0.12"
+        elif previousServer == "10.0.0.12":
+            previousServer = "10.0.0.13"
+            return "10.0.0.13"
+        else:
+            previousServer = "10.0.0.11"
+            return "10.0.0.11"
+
+    elif loadBalancingAlgorithm == 'leastBandwidth':
+        #TODO
+        return "10.0.0.11"
+
 
