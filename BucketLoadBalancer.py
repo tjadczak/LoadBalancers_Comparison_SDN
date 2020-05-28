@@ -94,16 +94,18 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    11: "10.0.0.11",
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
-    loadBalancingAlgorithm = "random" # 'random' / 'roundRobin' / 'leastBandwidth'
+    loadBalancingAlgorithm = "random" # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
         self.datapaths = {}
         self.elephant_flows = {}
         self.SendElephantFlowMonitor()
-        self.monitor_thread = hub.spawn(self.ElephantFlowMonitor)
+        if self.loadBalancingAlgorithm != 'none':
+            self.monitor_thread = hub.spawn(self.ElephantFlowMonitor)
         self.logger.info("--------------------------------------------------------------")
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
+        self.logger.info("%s: Selected Load Balancing algorithm: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.loadBalancingAlgorithm)
         self.logger.info("--------------------------------------------------------------")
 
     def SendElephantFlowMonitor(self):
