@@ -95,7 +95,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
     loadBalancingAlgorithm = 'random' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
-    idle_timeout = 200
+    idle_timeout = 2
     hard_timeout = 0
 
     def __init__(self, *args, **kwargs):
@@ -172,7 +172,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     tcp_src=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                            parser.OFPActionOutput(self.ip_to_port[host_ip])]
-                self.add_flow(datapath, priority, match, actions)
+                self.add_flow(datapath, priority, match, actions, idle_timeout=self.idle_timeout)
 
                 # Reverse flow host to server
                 in_port = self.ip_to_port[host_ip]
@@ -203,9 +203,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 actions = [parser.OFPActionSetField(ipv4_dst=server_ip),
                            parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                            parser.OFPActionOutput(self.ip_to_port[server_ip])]
-                self.add_flow(datapath, priority, match1, actions)
-                self.add_flow(datapath, priority, match2, actions)
-                self.add_flow(datapath, priority, match3, actions)
+                self.add_flow(datapath, priority, match1, actions, idle_timeout=self.idle_timeout)
+                self.add_flow(datapath, priority, match2, actions, idle_timeout=self.idle_timeout)
+                self.add_flow(datapath, priority, match3, actions, idle_timeout=self.idle_timeout)
 
                 self.logger.info("{}: Instaled new flows for elephant flow".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f')))
@@ -309,7 +309,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # ARP output message
         out = ofp_parser.OFPPacketOut(
             datapath=datapath,
-            #buffer_id=ofp.OFP_NO_BUFFER,
             match=match,
             actions=actions,
             data=p.data
@@ -318,21 +317,17 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         #self.logger.info("%s: ARP reply send", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
     # Sets up the flow table in the switch to map IP addresses correctly.
-    def add_flow(self, datapath, priority, match, actions, buffer_id=None, idle_timeout=None):
+    def add_flow(self, datapath, priority, match, actions, idle_timeout=None):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                              actions)]
-        if buffer_id:
-            mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
-                                    priority=priority, match=match,
-                                    instructions=inst, idle_timeout=self.idle_timeout,
-                                    hard_timeout=self.hard_timeout)
+        if idle_timeout:
+            mod = parser.OFPFlowMod(datapath=datapath, priority=priority, match=match, instructions=inst,
+                                    idle_timeout=self.idle_timeout)
         else:
-            mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
-                                    match=match, instructions=inst,
-                                    idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
+            mod = parser.OFPFlowMod(datapath=datapath, priority=priority,match=match, instructions=inst)
         datapath.send_msg(mod)
 
     def send_group_mod(self, datapath):
