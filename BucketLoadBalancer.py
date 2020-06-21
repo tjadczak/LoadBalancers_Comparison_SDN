@@ -95,6 +95,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
     loadBalancingAlgorithm = 'random' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
+    idle_timeout = 2
+    hard_timeout = 0
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
@@ -325,10 +327,12 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
                                     priority=priority, match=match,
-                                    instructions=inst)
+                                    instructions=inst, idle_timeout=self.idle_timeout,
+                                    hard_timeout=self.hard_timeout)
         else:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
-                                    match=match, instructions=inst)
+                                    match=match, instructions=inst,
+                                    idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
         datapath.send_msg(mod)
 
     def send_group_mod(self, datapath):
