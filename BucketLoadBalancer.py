@@ -177,7 +177,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 match1 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
-                    eth_dst=self.ip_to_mac[self.H11_ip],
+                    #eth_dst=self.ip_to_mac[self.H11_ip],
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
@@ -199,11 +199,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ip_proto=ip_proto,
                     tcp_dst=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_dst=server_ip),
-                           parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
+                           #parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                            parser.OFPActionOutput(self.ip_to_port[server_ip])]
                 self.add_flow(datapath, priority, match1, actions)
-                self.add_flow(datapath, priority, match2, actions)
-                self.add_flow(datapath, priority, match3, actions)
+                #self.add_flow(datapath, priority, match2, actions)
+                #self.add_flow(datapath, priority, match3, actions)
 
                 self.logger.info("{}: Instaled new flows for elephant flow".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f')))
