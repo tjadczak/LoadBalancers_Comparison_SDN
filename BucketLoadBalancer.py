@@ -141,14 +141,12 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 priority = 20
 
                 [server_ip, host_ip] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
-                '''if host_ip in self.elephant_flows.keys():
+                if host_ip in self.elephant_flows.keys():
                     continue
                 else:
                     self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
                         datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
-                    self.elephant_flows[host_ip] = 1'''
-                self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
-                    datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
+                    self.elephant_flows[host_ip] = 1
 
                 server_ip = getServerIp(self.loadBalancingAlgorithm)
 
