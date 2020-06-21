@@ -94,7 +94,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    11: "10.0.0.11",
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
-    loadBalancingAlgorithm = "random" # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
+    loadBalancingAlgorithm = 'random' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
