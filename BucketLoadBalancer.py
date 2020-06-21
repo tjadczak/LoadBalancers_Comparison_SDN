@@ -95,7 +95,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
     loadBalancingAlgorithm = 'random' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
-    idle_timeout = 2
+    idle_timeout = 200
     hard_timeout = 0
 
     def __init__(self, *args, **kwargs):
@@ -309,7 +309,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # ARP output message
         out = ofp_parser.OFPPacketOut(
             datapath=datapath,
-            buffer_id=ofp.OFP_NO_BUFFER,
+            #buffer_id=ofp.OFP_NO_BUFFER,
             match=match,
             actions=actions,
             data=p.data
@@ -318,7 +318,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         #self.logger.info("%s: ARP reply send", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
     # Sets up the flow table in the switch to map IP addresses correctly.
-    def add_flow(self, datapath, priority, match, actions, buffer_id=None):
+    def add_flow(self, datapath, priority, match, actions, buffer_id=None, idle_timeout=None):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
