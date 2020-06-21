@@ -33,13 +33,12 @@ import random
 class SimpleLoadBalancer(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_5.OFP_VERSION]
     virtual_ip = "10.0.0.100"  # The virtual server IP
-    # Hosts 5 and 6 are servers.
-    H11_mac = "00:00:00:00:00:0B"          # Host 5's mac
-    H11_ip = "10.0.0.11"                    # Host 5's IP
-    H12_mac = "00:00:00:00:00:0C"          # Host 6's mac
-    H12_ip = "10.0.0.12"                    # Host 6's IP
-    H13_mac = "00:00:00:00:00:0D"  # Host 6's mac
-    H13_ip = "10.0.0.13"  # Host 6's IP
+    H11_mac = "00:00:00:00:00:0B"
+    H11_ip = "10.0.0.11"
+    H12_mac = "00:00:00:00:00:0C"
+    H12_ip = "10.0.0.12"
+    H13_mac = "00:00:00:00:00:0D"
+    H13_ip = "10.0.0.13"
     group_table_id = 50
     rt = 'http://127.0.0.1:8008'
     ip_to_port = {"10.0.0.1": 1,
@@ -95,7 +94,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
     loadBalancingAlgorithm = 'random' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
-    idle_timeout = 2
+    idle_timeout = 4
     hard_timeout = 0
 
     def __init__(self, *args, **kwargs):
@@ -142,14 +141,15 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 priority = 20
 
                 [server_ip, host_ip] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
-                if host_ip in self.elephant_flows.keys():
+                '''if host_ip in self.elephant_flows.keys():
                     continue
                 else:
                     self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
                         datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
-                    self.elephant_flows[host_ip] = 1
+                    self.elephant_flows[host_ip] = 1'''
+                self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
+                    datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
 
-                # server_ip = H11_ip
                 server_ip = getServerIp(self.loadBalancingAlgorithm)
 
                 self.logger.info("{}: Elephant flow redirecting to: {}".format(
