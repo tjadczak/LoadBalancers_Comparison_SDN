@@ -1,0 +1,71 @@
+This is OpenLoad, a tool for load testing web applications
+(http://openload.sourceforge.net)
+
+OpenLoad is released under GNU GPL v. 2
+(http://www.gnu.org/copyleft/gpl.html)
+
+What is OpenLoad?
+=================
+
+OpenLoad is a tool for load testing web applications. It aims to be easy to
+use and providing near real-time performance measurements of the application
+under test. This is particulary useful when you are doing optimization as
+you can see the impact of your changes almost immediately.
+
+Building OpenLoad
+=================
+
+- Linux
+Please see the INSTALL file
+
+- Win32
+Run the make-win32.bat file, which will compile the Debug version
+(src/Debug/openload.exe). Alternatively you can open the workspace
+(openload.dsw) in the VisualC IDE and build from there.
+
+How do I use it?
+================
+
+OpenLoad is (currently) a commandline tool, that you execute from a
+prompt like this:
+
+ openload http://testapp.site.com 10
+
+The 2 parameters are:
+
+ * The url of the web page you want to test.
+ * Number of simultanous clients to simulate. This is optional and
+   defaults to 5
+
+You will then get output similar to this:
+
+ $ openload localhost 10
+ URL: http://localhost:80/
+ Clients: 10
+ MaTps 355.11, Tps 355.11, Resp Time  0.015, Err   0%, Count   511
+ MaTps 339.50, Tps 199.00, Resp Time  0.051, Err   0%, Count   711
+ MaTps 343.72, Tps 381.68, Resp Time  0.032, Err   0%, Count  1111
+ MaTps 382.04, Tps 727.00, Resp Time  0.020, Err   0%, Count  1838
+ MaTps 398.54, Tps 547.00, Resp Time  0.018, Err   0%, Count  2385
+ MaTps 425.78, Tps 670.90, Resp Time  0.014, Err   0%, Count  3072
+ 
+ Total TPS: 452.90
+ Avg. Response time:  0.021 sec.
+ Max Response time:   0.769 sec
+
+Where:
+
+ * MaTps: a 20 second moving average of Tps.
+ * Tps: (Transactions Per Second) is the number of completed requests
+   during that second.
+ * Resp Time: the average response time in seconds for the elapsed
+   second.
+ * Err: the percentage of responses that was erronous, i.e. didn't
+   return a HTTP 200 Ok staus.
+ * Count: the total number of completed requests.
+ * Total TPS: the average TPS for the whole run, i.e. (Total completed
+   requests) / (Total elapsed time).
+ * Avg. Response time: the overall average response time in seconds.
+ * Max Response time: the highest response time during this run.
+
+Note: you stop the run by pressing Enter.

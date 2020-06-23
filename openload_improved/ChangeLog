@@ -1,0 +1,22 @@
+26-jun-2001 v. 0.1.2
+
+-Bugfix: error in stri[n]cmp on linux
+-Added -t option for test runs showing response on stdout
+-Added -l option for time limit on test
+-Added -h option for specifying request headers
+-Added -o option for csv output mode
+-Cleaned up parameter parsing
+-Graceful handling of DNS lookup failure
+-Added first version of verifier code
+-Added -b option to only output the body in test mode
+
+27-mar-2001 v. 0.1.1
+
+-Added handling of non-chunked responses with no Content-Length header
+-Added handling of port numbers in urls
+-Added response times to output
+-Added error percentage to output
+
+27-feb-2001 v. 0.1.0
+
+Initial Version
