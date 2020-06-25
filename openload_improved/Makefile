@@ -59,7 +59,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 CC = gcc
 CXX = c++
-MAKEINFO = /home/mininet/source_openload/openload_improved/missing makeinfo
+MAKEINFO = /home/mininet/LoadBalancers_Comparison_SDN/openload_improved/missing makeinfo
 PACKAGE = openload
 VERSION = 0.1.2
 

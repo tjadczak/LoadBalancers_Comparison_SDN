@@ -16,7 +16,7 @@ import array
 import struct
 import sys
 import time
-
+import random
 
 REMOTE_CONTROLLER_IP = "127.0.0.1"
 
@@ -101,19 +101,19 @@ def main():
     server_3 = net.addHost('h13', cpu=0.05)
     switch = net.addSwitch('s1', cls=OVSSwitch, protocols='OpenFlow15')
 
-    net.addLink(switch, host_1, bw=5, delay='20ms')
-    net.addLink(switch, host_2, bw=5, delay='40ms')
-    net.addLink(switch, host_3, bw=5, delay='60ms')
-    net.addLink(switch, host_4, bw=5, delay='80ms')
-    net.addLink(switch, host_5, bw=5, delay='100ms')
-    net.addLink(switch, host_6, bw=5, delay='120ms')
-    net.addLink(switch, host_7, bw=5, delay='140ms')
-    net.addLink(switch, host_8, bw=5, delay='160ms')
-    net.addLink(switch, host_9, bw=5, delay='180ms')
-    net.addLink(switch, host_10, bw=5, delay='200ms')
-    net.addLink(switch, server_1, bw=20, delay='20ms')
-    net.addLink(switch, server_2, bw=20, delay='50ms')
-    net.addLink(switch, server_3, bw=25, delay='70ms')
+    net.addLink(switch, host_1, bw=1, delay='5ms')
+    net.addLink(switch, host_2, bw=1, delay='15ms')
+    net.addLink(switch, host_3, bw=1, delay='20ms')
+    net.addLink(switch, host_4, bw=1, delay='25ms')
+    net.addLink(switch, host_5, bw=1, delay='30ms')
+    net.addLink(switch, host_6, bw=1, delay='45ms')
+    net.addLink(switch, host_7, bw=1, delay='45ms')
+    net.addLink(switch, host_8, bw=1, delay='50ms')
+    net.addLink(switch, host_9, bw=1, delay='55ms')
+    net.addLink(switch, host_10, bw=1, delay='60ms')
+    net.addLink(switch, server_1, bw=4, delay='10ms')
+    net.addLink(switch, server_2, bw=4, delay='20ms')
+    net.addLink(switch, server_3, bw=5, delay='50ms')
 
     net.start()
 
@@ -124,33 +124,30 @@ def main():
     collector = os.environ.get('COLLECTOR', '127.0.0.1')
     (ifname, agent) = getIfInfo(collector)
     sendTopology(net, agent, collector)
-    print("*** START ***")
     
     for server in servers:
-        server.sendCmd('nohup python -m SimpleHTTPServer 80 &')
+        server.sendCmd('python -m SimpleHTTPServer 80 >/dev/null 2>&1&')
         server.waitOutput()
-        server.sendCmd('nohup python -m SimpleHTTPServer 3000 &')
+        server.sendCmd('python -m SimpleHTTPServer 3000 >/dev/null 2>&1&')
         server.waitOutput()
-    time.sleep(1)
-    #for host in hosts[:4]:
-    #    host.sendCmd("openload -l 100 -f {}_openload.csv 10.0.0.100:3000 &".format(host.name))
-    #    host.waitOutput()
-    
-    #host_1.sendCmd('openload -l 5 10.0.0.100:3000'.format(host_1.name))
-    host_1.sendCmd('openload -l 5 10.0.0.100:3000 > {}.log 2>&1'.format(host_1.name))
-    #pid = int( host_1.cmd('echo $!') )
-    #print(pid)
-    #time.sleep(10)
-    host_1.waitOutput()
-    #time.sleep(3000)
 
-    #for host in [host_1, host_2, host_3, host_4, host_5, host_6, host_7, host_8, host_9, host_10]:
-    #for host in [host_1, host_2, host_3, host_4]:
-    #    host.sendCmd("wget 10.0.0.100/LoadBalancers_Comparison_SDN/file_10MB -O /dev/null --timeout=1 &")
-    #    host.waitOutput()
-    #    time.sleep(1)
-    print("*** Entering CLI ***")
-    CLI(net)
+    print("*** TEST START ***")
+    time.sleep(1)
+    
+    for host in hosts[:4]:
+        host.sendCmd("openload -l 120 -f {}_openload.csv 10.0.0.100:3000 > {}_openload.log 2>&1 &".format(host.name, host.name))
+        host.waitOutput()
+    
+    time.sleep(10)
+
+    for host in hosts[3:7]:
+        host.sendCmd("wget 10.0.0.100/file_{}MB -O /dev/null --timeout=1 >/dev/null 2>&1 &".format(random.choice(['5', '10', '15'])))
+        host.waitOutput()
+        time.sleep(2)
+    
+    
+    print("*** TEST STOP ***")
+    #CLI(net)
     net.stop()
 
 

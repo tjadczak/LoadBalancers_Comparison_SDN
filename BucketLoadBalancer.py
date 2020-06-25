@@ -113,7 +113,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         flowTcp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,tcpsourceport,tcpdestinationport','value':'bytes'}
         requests.put(self.rt+'/flow/pair/json',data=json.dumps(flowTcp))
 
-        threshold = {'metric': 'pair', 'value': 1000000/8, 'byFlow': True, 'timeout': 1}
+        threshold = {'metric': 'pair', 'value': 100000/8, 'byFlow': True, 'timeout': 1}
         requests.put(self.rt + '/threshold/elephant/json', data=json.dumps(threshold))
 
 

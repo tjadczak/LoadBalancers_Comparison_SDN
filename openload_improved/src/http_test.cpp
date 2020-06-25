@@ -196,7 +196,6 @@ void ResponseFunc(CHttpContext* pContext)
 
 int main(int argc, char* argv[])
 {	
-    printf("test_1\n");
     CHttpHeaderList Headers;
     CHttpRequest* reqs;
     CUrl url;
@@ -205,10 +204,8 @@ int main(int argc, char* argv[])
     int i;
     EReqModes rMode = RM_NORMAL;
     EOutputModes oMode = OM_NORMAL;
-    printf("test_2\n");
     if (signal(SIGINT, sig_handler) == SIG_ERR)
 	printf("\nCan't catch SIGINT\n");
-	printf("test_3\n");
     // parse arguments
     char* arg;
     for(i = 1; i < argc; i++)
@@ -288,7 +285,6 @@ int main(int argc, char* argv[])
                 clients = atoi(arg);
         }
     }
-	printf("test_4\n");
     // Sanity check args
     if(addr == NULL)
     {
@@ -306,14 +302,10 @@ int main(int argc, char* argv[])
         printf("Error: DNS unable to find remote host\n");
         return 1;
     }
-	printf("test_5\n");
     strncpy(g_originalPath, url.path, 1024);
-	printf("test_6\n");
     CEventLoop evLoop;
-	printf("test_7\n");
     fprintf(stdout, "URL: http://%s:%d%s\n", url.host, url.port, url.path);
     fprintf(stdout, "Clients: %d\n", clients);
-	printf("test_8\n");
     if(g_fVerify)
     {
         fprintf(stdout, "Verifying enabled\n");
@@ -327,7 +319,6 @@ int main(int argc, char* argv[])
 
     g_startTime = getMsTime();
     g_lastReportTime = g_startTime;
-	printf("test_9\n");
     TReqParams* pReqParams = new TReqParams[clients];
     reqs = new CHttpRequest[clients];
     char path[1050];
@@ -348,9 +339,7 @@ int main(int argc, char* argv[])
 
         SendRequest(&reqs[i], &evLoop, ResponseFunc, &pReqParams[i]);
     }
-	printf("test_10\n");
     evLoop.run();
-	printf("test_after_evLoop.run()\n");
     if(rMode == RM_NORMAL)
     {
         long now = getMsTime();
