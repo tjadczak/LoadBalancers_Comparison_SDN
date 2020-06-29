@@ -17,7 +17,7 @@ import requests
 import json
 import re
 import random
-
+import os, subprocess
 
 """ 
     TOPOLOGY:
@@ -93,9 +93,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    11: "10.0.0.11",
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
-    loadBalancingAlgorithm = 'random' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
-    idle_timeout = 4
-    hard_timeout = 0
+    loadBalancingAlgorithm = 'roundRobin' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
+    idle_timeout = 1
+    hard_timeout = 15
+    priority = 20
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
@@ -103,17 +104,87 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.elephant_flows = {}
         self.SendElephantFlowMonitor()
         if self.loadBalancingAlgorithm != 'none':
-            self.monitor_thread = hub.spawn(self.ElephantFlowMonitor)
+            self.elephant_thread = hub.spawn(self.ElephantFlowMonitor)
+            self.monitor_thread = hub.spawn(self._monitor)
+            self.tput_thread = hub.spawn(self.port_stats_monitor)
         self.logger.info("--------------------------------------------------------------")
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("%s: Selected Load Balancing algorithm: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.loadBalancingAlgorithm)
         self.logger.info("--------------------------------------------------------------")
 
+    def _monitor(self):
+        while True:
+            self._request_stats()
+            hub.sleep(0.5)
+ 
+    def port_stats_monitor(self):
+        while True:
+            for dp in self.datapaths.values():
+                self.port_stats(dp)
+            hub.sleep(1)
+
+    def port_stats(self, datapath):
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
+        req = parser.OFPPortStatsRequest(datapath, 0, ofproto.OFPP_ANY)
+        datapath.send_msg(req)
+
+    @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
+    def _port_stats_reply_handler(self, ev):
+        body = ev.msg.body
+        for stat in sorted(body, key=attrgetter('port_no')):
+            self.logger.info('%8x %8d %8d',
+                             stat.port_no,
+                             stat.rx_bytes,
+                             stat.tx_bytes)
+
+    def _request_stats(self):
+        elephant_flows = {}
+        elephant_flows["10.0.0.1"] = 0
+        elephant_flows["10.0.0.2"] = 0
+        elephant_flows["10.0.0.3"] = 0
+        elephant_flows["10.0.0.4"] = 0
+        elephant_flows["10.0.0.5"] = 0
+        elephant_flows["10.0.0.6"] = 0
+        elephant_flows["10.0.0.7"] = 0
+        elephant_flows["10.0.0.8"] = 0
+        elephant_flows["10.0.0.9"] = 0
+        elephant_flows["10.0.0.10"] = 0
+
+        proc = subprocess.Popen(['ovs-ofctl', 'dump-flows', 's1', '--protocol=OpenFlow15'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        proc.wait()
+        lines = proc.stdout.readlines()
+        for row in lines:
+            if "=10.0.0.1," in row.decode("utf-8"):
+                elephant_flows["10.0.0.1"]+=1
+            elif "=10.0.0.2," in row.decode("utf-8"):
+                elephant_flows["10.0.0.2"]+=1
+            elif "=10.0.0.3," in row.decode("utf-8"):
+                elephant_flows["10.0.0.3"]+=1
+            elif "=10.0.0.4," in row.decode("utf-8"):
+                elephant_flows["10.0.0.4"]+=1
+            elif "=10.0.0.5," in row.decode("utf-8"):
+                elephant_flows["10.0.0.5"]+=1
+            elif "=10.0.0.6," in row.decode("utf-8"):
+                elephant_flows["10.0.0.6"]+=1
+            elif "=10.0.0.7," in row.decode("utf-8"):
+                elephant_flows["10.0.0.7"]+=1
+            elif "=10.0.0.8," in row.decode("utf-8"):
+                elephant_flows["10.0.0.8"]+=1
+            elif "=10.0.0.9," in row.decode("utf-8"):
+                elephant_flows["10.0.0.9"]+=1
+            elif "=10.0.0.10," in row.decode("utf-8"):
+                elephant_flows["10.0.0.10"]+=1
+
+        self.elephant_flows = elephant_flows
+
+    
     def SendElephantFlowMonitor(self):
         flowTcp = {'keys':'link:inputifindex,ipsource,ipdestination,ipprotocol,tcpsourceport,tcpdestinationport','value':'bytes'}
         requests.put(self.rt+'/flow/pair/json',data=json.dumps(flowTcp))
 
-        threshold = {'metric': 'pair', 'value': 100000/8, 'byFlow': True, 'timeout': 1}
+        threshold = {'metric': 'pair', 'value': 100000/8*5, 'byFlow': True, 'timeout': 1}
         requests.put(self.rt + '/threshold/elephant/json', data=json.dumps(threshold))
 
 
@@ -138,16 +209,23 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     datapath = self.datapaths[1]
                 except:
                     continue
-                priority = 20
+                self.priority = 20
 
                 [server_ip, host_ip] = re.findall('10\.0\.0\.[0-9]', str(e['flowKey']))
-                if host_ip in self.elephant_flows.keys():
+                #print(self.elephant_flows)
+                if self.elephant_flows[host_ip] == 1:
+                    self.priority = 21
+                    continue
+                elif self.elephant_flows[host_ip] != 0:
                     continue
                 else:
                     self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
                         datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
-                    self.elephant_flows[host_ip] = 1
+                    #self.elephant_flows[host_ip] = 1
 
+                self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
+                        datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
+                    
                 server_ip = getServerIp(self.loadBalancingAlgorithm)
 
                 self.logger.info("{}: Elephant flow redirecting to: {}".format(
@@ -156,7 +234,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 in_port = self.ip_to_port[server_ip]
                 eth_type = ether_types.ETH_TYPE_IP
                 ip_proto = 0x06
-                tcp_port = 80
+                tcp_port = 5000
                 parser = datapath.ofproto_parser
 
                 # Elephant flow ( 1Mbps ) detected s1-h5,10.0.0.5,10.0.0.2,6,80,44714
@@ -167,11 +245,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=server_ip,
                     ipv4_dst=host_ip,
                     ip_proto=ip_proto,
-                    tcp_src=tcp_port)
+                    tcp_dst=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                            parser.OFPActionOutput(self.ip_to_port[host_ip])]
-                self.add_flow(datapath, priority, match, actions, idle_timeout=self.idle_timeout)
-
+                self.add_flow(datapath, self.priority, match, actions, idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
+                
                 # Reverse flow host to server
                 in_port = self.ip_to_port[host_ip]
                 match1 = parser.OFPMatch(
@@ -181,7 +259,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
-                    tcp_dst=tcp_port)
+                    tcp_src=tcp_port)
                 match2 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
@@ -189,7 +267,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
-                    tcp_dst=tcp_port)
+                    tcp_src=tcp_port)
                 match3 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
@@ -197,13 +275,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
-                    tcp_dst=tcp_port)
+                    tcp_src=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_dst=server_ip),
                            parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                            parser.OFPActionOutput(self.ip_to_port[server_ip])]
-                self.add_flow(datapath, priority, match1, actions, idle_timeout=self.idle_timeout)
-                self.add_flow(datapath, priority, match2, actions, idle_timeout=self.idle_timeout)
-                self.add_flow(datapath, priority, match3, actions, idle_timeout=self.idle_timeout)
+                self.add_flow(datapath, self.priority, match1, actions, idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
+                self.add_flow(datapath, self.priority, match2, actions, idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
+                self.add_flow(datapath, self.priority, match3, actions, idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
 
                 self.logger.info("{}: Instaled new flows for elephant flow".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f')))
@@ -315,7 +393,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         #self.logger.info("%s: ARP reply send", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
     # Sets up the flow table in the switch to map IP addresses correctly.
-    def add_flow(self, datapath, priority, match, actions, idle_timeout=None):
+    def add_flow(self, datapath, priority, match, actions, idle_timeout=None, hard_timeout=None):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
@@ -323,7 +401,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                              actions)]
         if idle_timeout:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority, match=match, instructions=inst,
-                                    idle_timeout=self.idle_timeout)
+                                    idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
         else:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,match=match, instructions=inst)
         datapath.send_msg(mod)
