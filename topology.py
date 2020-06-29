@@ -151,14 +151,15 @@ def main():
     
     print("*** iperf START ***")
     for server in servers:
-        server.sendCmd("while true; do iperf -c 10.0.0.{} -p5000 -t{} -i1 >> {}_iperf_server.log 2>&1; done &".format(
-            random.choice(['1', '2', '3', '4', '5']),
-            random.choice(['2', '5', '8', '14']), server.name))
+        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 10 + 1)) -p5000 -t$(( $RANDOM % 8 + 5)) >> /dev/null 2>&1; done &")#.format(
+            #random.choice(['1', '2', '3', '4', '5']),
+            #random.choice(['2', '5', '8', '14']), server.name))
         server.waitOutput()
         time.sleep(0.5)
-        server.sendCmd("while true; do iperf -c 10.0.0.{} -p5000 -t{} -i1 >> {}_iperf_server.log 2>&1; done &".format(
-            random.choice(['6', '7', '8', '9', '10']),
-            random.choice(['3', '4', '7', '12']), server.name))
+        #server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 10 + 1)) -p5000 -t{} -i1 >> {}_iperf_server.log 2>&1; done &".format(
+        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 10 + 1)) -p5000 -t$(( $RANDOM % 8 + 5)) >> /dev/null 2>&1; done &")#.format(
+            #random.choice(['6', '7', '8', '9', '10']),
+            #random.choice(['3', '4', '7', '12']), server.name))
         server.waitOutput()
         time.sleep(0.5)
 
