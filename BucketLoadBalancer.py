@@ -135,8 +135,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     def _port_stats_reply_handler(self, ev):
         body = ev.msg.body
         for stat in sorted(body, key=attrgetter('port_no'))[:-1]:
-            self.throuhput[stat.port_no] = (stat.rx_bytes - self.throuhput[stat.port_no])/8*1024
-            self.logger.info("Port: {} throughput: {} kbps".format(stat.port_no, self.throuhput[stat.port_no]))
+            self.logger.info("Port: {} throughput: {} kbps".format(
+                stat.port_no, (self.throuhput[stat.port_no] - stat.rx_bytes)/8*1024))
+            self.throuhput[stat.port_no] = stat.rx_bytes
 
     def _request_stats(self):
         elephant_flows = {}
