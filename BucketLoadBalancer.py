@@ -93,6 +93,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    11: "10.0.0.11",
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
+    throuhput = [0]*14 # in kbps
     loadBalancingAlgorithm = 'roundRobin' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
     idle_timeout = 1
     hard_timeout = 15
@@ -133,8 +134,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
         body = ev.msg.body
-        for stat in sorted(body, key=attrgetter('port_no'))[10:13]:
-            self.logger.info("{}, {}".format(stat.port_no, stat.rx_bytes))
+        for stat in sorted(body, key=attrgetter('port_no'))[:-1]:
+            self.throuhput[stat.port_no] = (stat.rx_bytes - self.throuhput[stat.port_no])/8*1024
+            self.logger.info("Port: {} throughput: {} kbps".format(stat.port_no, self.throuhput[stat.port_no]))
 
     def _request_stats(self):
         elephant_flows = {}
