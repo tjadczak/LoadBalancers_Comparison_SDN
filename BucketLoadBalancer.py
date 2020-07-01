@@ -136,7 +136,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         body = ev.msg.body
         for stat in sorted(body, key=attrgetter('port_no'))[:-1]:
             self.logger.info("Port: {} throughput: {} kbps".format(
-                stat.port_no, (stat.rx_bytes - self.throuhput[stat.port_no])/8/1024))
+                stat.port_no, (stat.rx_bytes - self.throuhput[stat.port_no])*8/1024))
             self.throuhput[stat.port_no] = stat.rx_bytes
 
     def _request_stats(self):
