@@ -142,7 +142,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             self.rx_bytes[stat.port_no] = stat.rx_bytes
 
         with open('server_output_throughput.txt', 'a') as f:
-            f.write('{},{},{}'.format(self.throuhput[11], self.throuhput[12], self.throuhput[13]))
+            f.write('{},{},{}\n'.format(self.throuhput[11], self.throuhput[12], self.throuhput[13]))
 
     def _request_stats(self):
         elephant_flows = {}
