@@ -18,7 +18,6 @@ import json
 import re
 import random
 import os, subprocess
-import logging
 
 """ 
     TOPOLOGY:
@@ -114,7 +113,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("%s: Selected Load Balancing algorithm: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.loadBalancingAlgorithm)
         self.logger.info("--------------------------------------------------------------")
-        logging.basicConfig(filename='throughput.log', level=logging.INFO, format='%(message)s')
+        with open('server_output_throughput.txt', 'w') as f:
+            pass
 
     def _monitor(self):
         while True:
@@ -141,7 +141,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             self.throuhput[stat.port_no] = (stat.rx_bytes - self.rx_bytes[stat.port_no])*8/1024
             self.rx_bytes[stat.port_no] = stat.rx_bytes
 
-        logging.info('{},{},{}'.format(self.throuhput[11], self.throuhput[12], self.throuhput[13]))
+        with open('server_output_throughput.txt', 'a') as f:
+            f.write('{},{},{}'.format(self.throuhput[11], self.throuhput[12], self.throuhput[13]))
 
     def _request_stats(self):
         elephant_flows = {}
