@@ -18,6 +18,7 @@ import json
 import re
 import random
 import os, subprocess
+import logging
 
 """ 
     TOPOLOGY:
@@ -93,11 +94,13 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    11: "10.0.0.11",
                    12: "10.0.0.12",
                    13: "10.0.0.13"}
-    throuhput = [0]*14 # in kbps
+    throuhput = [0] * 14 # in kbps
+    rx_bytes = [0] * 14
     loadBalancingAlgorithm = 'roundRobin' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
     idle_timeout = 1
     hard_timeout = 15
     priority = 20
+    logging.basicConfig(filename='throughput.log', level=logging.INFO, format='%(message)s')
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
@@ -135,9 +138,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     def _port_stats_reply_handler(self, ev):
         body = ev.msg.body
         for stat in sorted(body, key=attrgetter('port_no'))[:-1]:
-            self.logger.info("Port: {} throughput: {} kbps".format(
-                stat.port_no, (stat.rx_bytes - self.throuhput[stat.port_no])*8/1024))
-            self.throuhput[stat.port_no] = stat.rx_bytes
+            self.throuhput[stat.port_no] = (stat.rx_bytes - self.rx_bytes[stat.port_no])*8/1024
+            self.rx_bytes[stat.port_no] = stat.rx_bytes
+
+        logging.info('{},{},{}'.format(self.throuhput[11], self.throuhput[12], self.throuhput[13]))
 
     def _request_stats(self):
         elephant_flows = {}
@@ -450,7 +454,9 @@ def getServerIp(loadBalancingAlgorithm):
             return "10.0.0.11"
 
     elif loadBalancingAlgorithm == 'leastBandwidth':
-        #TODO
-        return "10.0.0.11"
-
-
+        if self.throuhput[11:14].index(min(self.throuhput[11:14])) == 11:
+            return "10.0.0.11"
+        elif self.throuhput[11:14].index(min(self.throuhput[11:14])) == 12:
+            return "10.0.0.12"
+        else:
+            return "10.0.0.13"
