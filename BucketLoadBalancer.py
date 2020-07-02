@@ -100,7 +100,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     idle_timeout = 1
     hard_timeout = 15
     priority = 20
-    logging.basicConfig(filename='throughput.log', level=logging.INFO, format='%(message)s')
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
@@ -115,6 +114,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("%s: Selected Load Balancing algorithm: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.loadBalancingAlgorithm)
         self.logger.info("--------------------------------------------------------------")
+        logging.basicConfig(filename='throughput.log', level=logging.INFO, format='%(message)s')
 
     def _monitor(self):
         while True:
