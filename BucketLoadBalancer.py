@@ -101,9 +101,9 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    14: "10.0.0.14"}
     throuhput = [0] * 15 # in kbps
     rx_bytes = [0] * 15
-    loadBalancingAlgorithm = 'none' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
-    idle_timeout = 1
-    hard_timeout = 15
+    loadBalancingAlgorithm = 'random' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
+    idle_timeout = 3
+    hard_timeout = 10
     priority = 20
 
     def __init__(self, *args, **kwargs):
@@ -256,7 +256,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=server_ip,
                     ipv4_dst=host_ip,
                     ip_proto=ip_proto,
-                    tcp_dst=tcp_port)
+                    tcp_src=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                            parser.OFPActionOutput(self.ip_to_port[host_ip])]
                 self.add_flow(datapath, self.priority, match, actions, idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
@@ -270,7 +270,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
-                    tcp_src=tcp_port)
+                    tcp_dst=tcp_port)
                 match2 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
@@ -278,7 +278,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
-                    tcp_src=tcp_port)
+                    tcp_dst=tcp_port)
                 match3 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
@@ -286,7 +286,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
-                    tcp_src=tcp_port)
+                    tcp_dst=tcp_port)
                 match4 = parser.OFPMatch(
                     in_port=in_port,
                     eth_type=eth_type,
@@ -294,7 +294,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_src=host_ip,
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
-                    tcp_src=tcp_port)
+                    tcp_dst=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_dst=server_ip),
                            parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                            parser.OFPActionOutput(self.ip_to_port[server_ip])]
