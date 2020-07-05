@@ -88,20 +88,20 @@ def main():
     net.addController("c0", controller=RemoteController,
                       ip=REMOTE_CONTROLLER_IP, port=6633)
 
-    host_1 = net.addHost('h1', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    host_2 = net.addHost('h2', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    host_3 = net.addHost('h3', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    host_4 = net.addHost('h4', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    host_5 = net.addHost('h5', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    host_6 = net.addHost('h6', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    host_7 = net.addHost('h7', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    host_8 = net.addHost('h8', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    host_9 = net.addHost('h9', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    host_10 = net.addHost('h10', cpu=0.05, loss=0.1, max_queue_size=1000, use_htb=True)
-    server_1 = net.addHost('h11', cpu=0.15, max_queue_size=3000, use_htb=True)
-    server_2 = net.addHost('h12', cpu=0.15, max_queue_size=3000, use_htb=True)
-    server_3 = net.addHost('h13', cpu=0.15, max_queue_size=3000, use_htb=True)
-    server_4 = net.addHost('h14', cpu=0.15, max_queue_size=3000, use_htb=True)
+    host_1 = net.addHost('h1', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    host_2 = net.addHost('h2', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    host_3 = net.addHost('h3', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    host_4 = net.addHost('h4', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    host_5 = net.addHost('h5', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    host_6 = net.addHost('h6', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    host_7 = net.addHost('h7', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    host_8 = net.addHost('h8', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    host_9 = net.addHost('h9', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    host_10 = net.addHost('h10', cpu=0.1, loss=0.01, max_queue_size=1000, use_htb=True)
+    server_1 = net.addHost('h11', cpu=0.25, max_queue_size=3000, use_htb=True)
+    server_2 = net.addHost('h12', cpu=0.25, max_queue_size=3000, use_htb=True)
+    server_3 = net.addHost('h13', cpu=0.25, max_queue_size=3000, use_htb=True)
+    server_4 = net.addHost('h14', cpu=0.25, max_queue_size=3000, use_htb=True)
     switch = net.addSwitch('s1', cls=OVSSwitch, protocols='OpenFlow15')
 
     net.addLink(switch, host_1, bw=1, delay='25ms')
@@ -132,57 +132,33 @@ def main():
     for server in servers:
         server.sendCmd('python -m SimpleHTTPServer 80 >/dev/null 2>&1&')
         server.waitOutput()
-        #server.sendCmd('python -m SimpleHTTPServer 3000 >/dev/null 2>&1&')
-        #server.waitOutput()
-        #server.sendCmd('iperf3 -s -p5000 -i1 --forceflush > {}_iperf_server.log 2>&1 &'.format(server.name))
-        #server.waitOutput()
     
     for host in hosts:
         host.sendCmd('iperf -s -p5000 -i1 > /dev/null 2>&1 &')
         host.waitOutput()
 
     print("*** TEST START ***")
-    time.sleep(1)
+    time.sleep(0.1)
     print("*** OPENLOAD START ***")
     
     for host in hosts[:3]:
         host.sendCmd("openload -f {}_openload.csv 10.0.0.100:80 >> /dev/null 2>&1 &".format(host.name))
         host.waitOutput()
     
-    time.sleep(5)
-    
     print("*** iperf START ***")
     for server in servers:
-        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 7 + 4)) -p5000 -t$(( $RANDOM % 8 + 8)) >> /dev/null 2>&1; done &")#.format(
-            #random.choice(['1', '2', '3', '4', '5']),
-            #random.choice(['2', '5', '8', '14']), server.name))
+        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 7 + 4)) -p5000 -t$(( $RANDOM % 8 + 6)) >> /dev/null 2>&1; done &")
         server.waitOutput()
-        time.sleep(0.5)
-        #server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 10 + 1)) -p5000 -t{} -i1 >> {}_iperf_server.log 2>&1; done &".format(
-        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 7 + 4)) -p5000 -t$(( $RANDOM % 8 + 8)) >> /dev/null 2>&1; done &")#.format(
-            #random.choice(['6', '7', '8', '9', '10']),
-            #random.choice(['3', '4', '7', '12']), server.name))
+        time.sleep(0.2)
+        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 7 + 4)) -p5000 -t$(( $RANDOM % 8 + 6)) >> /dev/null 2>&1; done &")
         server.waitOutput()
-        time.sleep(0.5)
+        time.sleep(0.2)
+        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 7 + 4)) -p5000 -t$(( $RANDOM % 8 + 6)) >> /dev/null 2>&1; done &")
+        server.waitOutput()
+        time.sleep(0.2)
 
-    '''print("*** iperf START ***")
-    for host in hosts[3:]:
-        #host.sendCmd("while true; do iperf3 -c 10.0.0.100 -p5000 -t{} -i1 --forceflush -R >{}_iperf_client.log 2>&1; done &".format(
-        host.sendCmd("while true; do iperf3 -c 10.0.0.100 -p5000 -t{} -i1 --forceflush -R >{}_iperf_client.log 2>&1; done &".format(
-            random.choice(['9', '11', '5', '7']), host.name))
-        host.waitOutput()
-        time.sleep(2)'''
-
-
-    '''print("*** WGET START ***")
-    for host in hosts[3:]:
-        host.sendCmd("while true; do wget 10.0.0.100/file_{}MB -O /dev/null --timeout=3 --tries=3 >{}_wget.log 2>&1; done &".format(
-            random.choice(['1', '3', '5', '7']), host.name))
-        host.waitOutput()
-        time.sleep(2)'''
-    
     #CLI(net)
-    time.sleep(300)
+    time.sleep(200)
     print("*** TEST STOP ***")
     net.stop()
     
@@ -195,7 +171,7 @@ def main():
             for row in csv.reader(f):
                 ws.append(row)
 
-    wb.save('results.xlsx')
+    wb.save('results_{}_{}.xlsx'.format(sys.argv[1],sys.argv[2]))
     
     print("*** DONE ***")
     #CLI(net)

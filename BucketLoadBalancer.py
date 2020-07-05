@@ -101,7 +101,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    14: "10.0.0.14"}
     throuhput = [0] * 15 # in kbps
     rx_bytes = [0] * 15
-    loadBalancingAlgorithm = 'roundRobin' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
+    loadBalancingAlgorithm = 'none' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
     idle_timeout = 1
     hard_timeout = 15
     priority = 20
@@ -113,8 +113,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.SendElephantFlowMonitor()
         if self.loadBalancingAlgorithm != 'none':
             self.elephant_thread = hub.spawn(self.ElephantFlowMonitor)
-            self.monitor_thread = hub.spawn(self._monitor)
-            self.tput_thread = hub.spawn(self.port_stats_monitor)
+        self.monitor_thread = hub.spawn(self._monitor)
+        self.tput_thread = hub.spawn(self.port_stats_monitor)
         self.logger.info("--------------------------------------------------------------")
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("%s: Selected Load Balancing algorithm: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.loadBalancingAlgorithm)
