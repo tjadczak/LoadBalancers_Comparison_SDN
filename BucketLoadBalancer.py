@@ -119,7 +119,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("%s: Selected Load Balancing algorithm: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.loadBalancingAlgorithm)
         self.logger.info("--------------------------------------------------------------")
-        with open('server_output_throughput.txt', 'w') as f:
+        with open('server_output_throughput.csv', 'w') as f:
             pass
 
     def _monitor(self):
@@ -147,7 +147,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             self.throuhput[stat.port_no] = (stat.rx_bytes - self.rx_bytes[stat.port_no])*8/1024
             self.rx_bytes[stat.port_no] = stat.rx_bytes
 
-        with open('server_output_throughput.txt', 'a') as f:
+        with open('server_output_throughput.csv', 'a') as f:
             f.write('{:.0f},{:.0f},{:.0f},{:.0f}\n'.format(self.throuhput[11], self.throuhput[12], self.throuhput[13], self.throuhput[14]))
 
     def _request_stats(self):

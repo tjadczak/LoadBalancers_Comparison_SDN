@@ -160,8 +160,8 @@ void ResponseFunc(CHttpContext* pContext)
 	time_t now = time(0);
 	strftime(buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now));
 	g_fp = fopen(g_fileName,"a");
-	fprintf(g_fp, "%s,%6.2f,%6.2f,%6.3f,%3ld%%,%5ld\n",
-           buff, g_maTps,tps,respTime,g_errorCount*100/g_count,g_totalCount);
+	fprintf(g_fp, "%6.2f,%6.3f\n",
+           tps,respTime);
 	fclose(g_fp);
         fprintf(stdout, "MaTps %6.2f, Tps %6.2f, Resp Time %6.3f, Err %3ld%%, Count %5ld\n",
            g_maTps,tps,respTime,g_errorCount*100/g_count,g_totalCount);

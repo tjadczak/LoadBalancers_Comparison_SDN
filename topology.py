@@ -138,7 +138,7 @@ def main():
         #server.waitOutput()
     
     for host in hosts:
-        host.sendCmd('iperf -s -p5000 -i1 > {}_iperf_host.log 2>&1 &'.format(host.name))
+        host.sendCmd('iperf -s -p5000 -i1 > /dev/null 2>&1 &')
         host.waitOutput()
 
     print("*** TEST START ***")
@@ -146,7 +146,7 @@ def main():
     print("*** OPENLOAD START ***")
     
     for host in hosts[:3]:
-        host.sendCmd("openload -f {}_openload.csv 10.0.0.100:80 >> {}_openload.log 2>&1 &".format(host.name, host.name))
+        host.sendCmd("openload -f {}_openload.csv 10.0.0.100:80 >> /dev/null 2>&1 &".format(host.name))
         host.waitOutput()
     
     time.sleep(5)
@@ -186,7 +186,7 @@ def main():
     print("*** TEST STOP ***")
     net.stop()
     
-    '''print("*** CSV TO XLSX CONVERTION ***")
+    print("*** CSV TO XLSX CONVERTION ***")
     wb = Workbook()
     for filename in fnmatch.filter(os.listdir('.'), '*.csv'):
         ws = wb.create_sheet(filename)
@@ -196,7 +196,7 @@ def main():
                 ws.append(row)
 
     wb.save('results.xlsx')
-    '''
+    
     print("*** DONE ***")
     #CLI(net)
 
