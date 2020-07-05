@@ -101,6 +101,7 @@ def main():
     server_1 = net.addHost('h11', cpu=0.15, max_queue_size=3000, use_htb=True)
     server_2 = net.addHost('h12', cpu=0.15, max_queue_size=3000, use_htb=True)
     server_3 = net.addHost('h13', cpu=0.15, max_queue_size=3000, use_htb=True)
+    server_4 = net.addHost('h14', cpu=0.15, max_queue_size=3000, use_htb=True)
     switch = net.addSwitch('s1', cls=OVSSwitch, protocols='OpenFlow15')
 
     net.addLink(switch, host_1, bw=1, delay='25ms')
@@ -116,6 +117,7 @@ def main():
     net.addLink(switch, server_1, bw=4, delay='10ms')
     net.addLink(switch, server_2, bw=4, delay='20ms')
     net.addLink(switch, server_3, bw=4, delay='50ms')
+    net.addLink(switch, server_4, bw=4, delay='30ms')
 
     net.start()
 
@@ -151,13 +153,13 @@ def main():
     
     print("*** iperf START ***")
     for server in servers:
-        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 10 + 1)) -p5000 -t$(( $RANDOM % 8 + 5)) >> /dev/null 2>&1; done &")#.format(
+        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 7 + 4)) -p5000 -t$(( $RANDOM % 8 + 5)) >> /dev/null 2>&1; done &")#.format(
             #random.choice(['1', '2', '3', '4', '5']),
             #random.choice(['2', '5', '8', '14']), server.name))
         server.waitOutput()
         time.sleep(0.5)
         #server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 10 + 1)) -p5000 -t{} -i1 >> {}_iperf_server.log 2>&1; done &".format(
-        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 10 + 1)) -p5000 -t$(( $RANDOM % 8 + 5)) >> /dev/null 2>&1; done &")#.format(
+        server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 7 + 4)) -p5000 -t$(( $RANDOM % 8 + 5)) >> /dev/null 2>&1; done &")#.format(
             #random.choice(['6', '7', '8', '9', '10']),
             #random.choice(['3', '4', '7', '12']), server.name))
         server.waitOutput()
@@ -180,7 +182,7 @@ def main():
         time.sleep(2)'''
     
     #CLI(net)
-    time.sleep(240)
+    time.sleep(300)
     print("*** TEST STOP ***")
     net.stop()
     

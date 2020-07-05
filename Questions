@@ -1,14 +1,20 @@
-CPU limited do 1% na serwerach
-openload generuje płaski ruch? inny tool żeby warunki były prawdzwisze?
-Ile serwerów?
-Czy topologia jest dobra?
+Co zrobiłem:
+    - Kolektor SFlow do wizualizacji i wykrywania elephant flowów
+    - Zmiana z OpenFlow1.3 na OpenFlow1.5
+    - Topologia: 3 serwery, 10 hostów
+    - Podstawowa komunikacja serwer <-> host za pomocą group table typu select buckets (podstawowy LB)
+    - Implementacja LB: random, round robin, least bandwidth i none
+    - Ruch typu 'mice' generowany za pomocą openload'a - możliwość mierzenia responsywności serwerów
+    - Ruch typu 'elephant' generowany za pomocą iperf'a - możliwość mierzenia przepływności serwerów i całej 'aplikacji'
 
+Co dalej:
+    - różne scenariusze:
+        - select buckets + 4 różne LB
+        - bez select buckets + 4 różne LB (tylko co wtedy z ruchem HTTP?)
+        - może podzielić x serwerów na ruch HTTP a y serwerów tylko po to by przerzucać tam ruch iperf'a?
+    - jak DOBRZE ustawić parametry tc.link?
+    - jeden host tylko http/iperf czy oba naraz? (iperf zapcha łącze, http w ogóle nie przejdzie?)
 
-todo:
-kolektor sflow'a do zbierania statystyk
-LB per flow lub per tput?
+Sprawdzić wpływ na ruch tcp udp straty
+tablice grupowe czy wpisy per 5 kazdy flow
 
-ditg distributed internet traffic generator
-video, torrent
-
-resposne time = tc.link

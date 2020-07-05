@@ -39,6 +39,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     H12_ip = "10.0.0.12"
     H13_mac = "00:00:00:00:00:0D"
     H13_ip = "10.0.0.13"
+    H14_mac = "00:00:00:00:00:0E"
+    H14_ip = "10.0.0.14"
     group_table_id = 50
     rt = 'http://127.0.0.1:8008'
     ip_to_port = {"10.0.0.1": 1,
@@ -53,7 +55,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                   "10.0.0.10": 10,
                   "10.0.0.11": 11,
                   "10.0.0.12": 12,
-                  "10.0.0.13": 13}
+                  "10.0.0.13": 13,
+                  "10.0.0.14": 14}
     ip_to_mac = {"10.0.0.1": "00:00:00:00:00:01",
                  "10.0.0.2": "00:00:00:00:00:02",
                  "10.0.0.3": "00:00:00:00:00:03",
@@ -66,7 +69,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                  "10.0.0.10": "00:00:00:00:00:0A",
                  "10.0.0.11": "00:00:00:00:00:0B",
                  "10.0.0.12": "00:00:00:00:00:0C",
-                 "10.0.0.13": "00:00:00:00:00:0D"}
+                 "10.0.0.13": "00:00:00:00:00:0D",
+                 "10.0.0.14": "00:00:00:00:00:0E"}
     port_to_mac = {1: "00:00:00:00:00:01",
                    2: "00:00:00:00:00:02",
                    3: "00:00:00:00:00:03",
@@ -79,7 +83,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    10: "00:00:00:00:00:0A",
                    11: "00:00:00:00:00:0B",
                    12: "00:00:00:00:00:0C",
-                   13: "00:00:00:00:00:0D"}
+                   13: "00:00:00:00:00:0D",
+                   14: "00:00:00:00:00:0E"}
     port_to_ip = { 1: "10.0.0.1",
                    2: "10.0.0.2",
                    3: "10.0.0.3",
@@ -92,9 +97,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    10: "10.0.0.10",
                    11: "10.0.0.11",
                    12: "10.0.0.12",
-                   13: "10.0.0.13"}
-    throuhput = [0] * 14 # in kbps
-    rx_bytes = [0] * 14
+                   13: "10.0.0.13",
+                   14: "10.0.0.14"}
+    throuhput = [0] * 15 # in kbps
+    rx_bytes = [0] * 15
     loadBalancingAlgorithm = 'roundRobin' # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
     idle_timeout = 1
     hard_timeout = 15
@@ -142,7 +148,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             self.rx_bytes[stat.port_no] = stat.rx_bytes
 
         with open('server_output_throughput.txt', 'a') as f:
-            f.write('{},{},{}\n'.format(self.throuhput[11], self.throuhput[12], self.throuhput[13]))
+            f.write('{},{},{}\n'.format(self.throuhput[11], self.throuhput[12], self.throuhput[13], self.throuhput[14]))
 
     def _request_stats(self):
         elephant_flows = {}
@@ -281,12 +287,21 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     ipv4_dst=self.virtual_ip,
                     ip_proto=ip_proto,
                     tcp_src=tcp_port)
+                match4 = parser.OFPMatch(
+                    in_port=in_port,
+                    eth_type=eth_type,
+                    eth_dst=self.ip_to_mac[self.H14_ip],
+                    ipv4_src=host_ip,
+                    ipv4_dst=self.virtual_ip,
+                    ip_proto=ip_proto,
+                    tcp_src=tcp_port)
                 actions = [parser.OFPActionSetField(ipv4_dst=server_ip),
                            parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                            parser.OFPActionOutput(self.ip_to_port[server_ip])]
                 self.add_flow(datapath, self.priority, match1, actions, idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
                 self.add_flow(datapath, self.priority, match2, actions, idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
                 self.add_flow(datapath, self.priority, match3, actions, idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
+                self.add_flow(datapath, self.priority, match4, actions, idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
 
                 self.logger.info("{}: Instaled new flows for elephant flow".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f')))
@@ -325,7 +340,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             actions = [parser.OFPActionGroup(group_id=self.group_table_id)]
             self.add_flow(datapath, 10, match, actions)
 
-            for server in range(11,14):
+            for server in range(11,15):
                 match = parser.OFPMatch(
                     in_port=server,
                     eth_type=ether_types.ETH_TYPE_IP,
@@ -424,12 +439,16 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         actions3 = [parser.OFPActionSetField(ipv4_dst=self.H13_ip),
                     parser.OFPActionSetField(eth_dst=self.H13_mac),
                     parser.OFPActionOutput(self.ip_to_port[self.H13_ip])]
+        actions4 = [parser.OFPActionSetField(ipv4_dst=self.H14_ip),
+                    parser.OFPActionSetField(eth_dst=self.H14_mac),
+                    parser.OFPActionOutput(self.ip_to_port[self.H14_ip])]
 
         command_bucket_id=ofproto.OFPG_BUCKET_ALL
         
         buckets = [parser.OFPBucket(bucket_id=1, actions=actions1, properties=None),
                    parser.OFPBucket(bucket_id=2, actions=actions2, properties=None),
-                   parser.OFPBucket(bucket_id=3, actions=actions3, properties=None)]
+                   parser.OFPBucket(bucket_id=3, actions=actions3, properties=None),
+                   parser.OFPBucket(bucket_id=4, actions=actions4, properties=None)]
 
         req = parser.OFPGroupMod(datapath, ofproto.OFPGC_ADD,
                                  ofproto.OFPGT_SELECT, self.group_table_id, command_bucket_id, buckets)
@@ -441,7 +460,7 @@ def getServerIp(loadBalancingAlgorithm):
     global previousServer
 
     if loadBalancingAlgorithm == 'random':
-        return random.choice(["10.0.0.11", "10.0.0.12", "10.0.0.13"])
+        return random.choice(["10.0.0.11", "10.0.0.12", "10.0.0.13", "10.0.0.14"])
 
     elif loadBalancingAlgorithm == 'roundRobin':
         if previousServer == "10.0.0.11":
@@ -450,14 +469,19 @@ def getServerIp(loadBalancingAlgorithm):
         elif previousServer == "10.0.0.12":
             previousServer = "10.0.0.13"
             return "10.0.0.13"
+        elif previousServer == "10.0.0.13":
+            previousServer = "10.0.0.14"
+            return "10.0.0.14"
         else:
             previousServer = "10.0.0.11"
             return "10.0.0.11"
 
     elif loadBalancingAlgorithm == 'leastBandwidth':
-        if self.throuhput[11:14].index(min(self.throuhput[11:14])) == 11:
+        if self.throuhput[11:15].index(min(self.throuhput[11:15])) == 11:
             return "10.0.0.11"
-        elif self.throuhput[11:14].index(min(self.throuhput[11:14])) == 12:
+        elif self.throuhput[11:15].index(min(self.throuhput[11:15])) == 12:
             return "10.0.0.12"
-        else:
+        elif self.throuhput[11:15].index(min(self.throuhput[11:15])) == 13:
             return "10.0.0.13"
+        else:
+            return "10.0.0.14"
