@@ -385,7 +385,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # choose the target/source MAC address from one of the servers;
         # else the target MAC address is set to the one corresponding
         # to the target host's IP.
-        if dstIp != self.H11_ip and dstIp != self.H12_ip and dstIp != self.H13_ip:
+        if dstIp != self.H11_ip and dstIp != self.H12_ip and dstIp != self.H13_ip and dstIp != self.H14_ip:
             srcMac = self.ip_to_mac[self.H11_ip]
             #self.logger.info("%s: Sending ARP reply to HOST", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         else:
@@ -421,7 +421,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                                              actions)]
         if idle_timeout:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority, match=match, instructions=inst,
-                                    idle_timeout=self.idle_timeout, hard_timeout=self.hard_timeout)
+                                    idle_timeout=idle_timeout, hard_timeout=hard_timeout)
         else:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,match=match, instructions=inst)
         datapath.send_msg(mod)
