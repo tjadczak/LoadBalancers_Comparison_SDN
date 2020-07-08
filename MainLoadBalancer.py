@@ -480,6 +480,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         ofp = dp.ofproto
         ofp_parser = dp.ofproto_parser
         in_port = msg.match['in_port']
+        packet = packet.Packet(msg.data)
         srcIp = packet.get_protocol(ipv4.ipv4).src
 
         if not packet.get_protocol(tcp.tcp):
