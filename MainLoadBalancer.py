@@ -480,15 +480,15 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         ofp = dp.ofproto
         ofp_parser = dp.ofproto_parser
         in_port = msg.match['in_port']
-        packet = packet.Packet(msg.data)
-        srcIp = packet.get_protocol(ipv4.ipv4).src
+        pkt = packet.Packet(msg.data)
+        srcIp = pkt.get_protocol(ipv4.ipv4).src
 
-        if not packet.get_protocol(tcp.tcp):
+        if not pkt.get_protocol(tcp.tcp):
             self.logger.warning("%s: Not a TCP packet !!!", datetime.datetime.now().strftime('%H:%M:%S.%f'))
             return
 
-        #hostSrcTcpPort = packet.get_protocol(tcp.tcp).src_port
-        hostDstTcpPort = packet.get_protocol(tcp.tcp).dst_port
+        #hostSrcTcpPort = pkt.get_protocol(tcp.tcp).src_port
+        hostDstTcpPort = pkt.get_protocol(tcp.tcp).dst_port
         ipProto = 0x06
         priority = 10
 
