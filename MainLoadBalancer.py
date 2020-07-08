@@ -105,7 +105,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     idle_timeout = 3
     hard_timeout = 10
     priority = 20
-    loadBalancingAlgorithm = 'none'  # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
+    loadBalancingAlgorithm = 'random'  # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
     buckets = False
 
     def __init__(self, *args, **kwargs):
