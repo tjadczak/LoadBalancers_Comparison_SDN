@@ -18,3 +18,20 @@ Co dalej:
 Sprawdzić wpływ na ruch tcp udp straty
 tablice grupowe czy wpisy per 5 kazdy flow
 
+
+Ruch:
+   openload
+   wget
+Serwery: 4
+Hosty: 3 openload 7 wget
+Konfiguracje:
+    4 serwery na group buckets
+    3 serwery na group buckets + 1 serwer na elephant flows
+    2 serwery na group buckets + 2 serwery na elephant flows random/roundRobin/leastBandwidth
+    1 serwer na group buckets + 3 serwery na elephant flows random/roundRobin/leastBandwidth
+    4 serwery na sztywne przypisanie do danego serwera flowu host-serwer random/roundRobin/leastBandwidth
+    3 serwery na sztywne przypisanie do danego serwera flowu host-serwer random/roundRobin/leastBandwidth + 1 serwer na elephant flows
+    2 serwery na sztywne przypisanie do danego serwera flowu host-serwer random/roundRobin/leastBandwidth + 2 serwery na elephant flows random/roundRobin/leastBandwidth
+    1 serwer na sztywne przypisanie do danego serwera flowu host-serwer random/roundRobin/leastBandwidth + 3 serwery na elephant flows random/roundRobin/leastBandwidth
+
+
