@@ -498,6 +498,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             self.logger.warning(
                 "%s: Got IPv4 TCP Packet In from server, but flow should be already installed to handle this !",
                 datetime.datetime.now().strftime('%H:%M:%S.%f'))
+            print(msg)
+            print(msg.data)
             return
 
         else:
