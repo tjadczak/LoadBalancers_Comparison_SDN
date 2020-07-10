@@ -518,7 +518,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 priority=priority,
                 match=match,
                 instructions=inst)
-            datapath.send_msg(mod)
+            dp.send_msg(mod)
             self.logger.info("%s: Send new flow from host to server", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
             # Generate reverse flow from server to host.
@@ -537,7 +537,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 priority=priority,
                 match=match,
                 instructions=inst)
-            datapath.send_msg(mod)
+            dp.send_msg(mod)
             self.logger.info("%s: Send reverse new flow from server to host",
                              datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
@@ -552,7 +552,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 in_port=in_port,
                 actions=actions,
                 data=data)
-            datapath.send_msg(out)
+            dp.send_msg(out)
             self.logger.info("%s: Send Packet Out to server", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
 previousServer = "10.0.0.11"
