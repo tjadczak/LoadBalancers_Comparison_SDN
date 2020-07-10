@@ -504,7 +504,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         else:
             server_ip = getServerIp(self.loadBalancingAlgorithm)
             # Generate flow from host to server.
-            match = self.create_match(ofp_parser, in_port, self.virtual_ip, 0x0800, ip_proto=ipProto, tcp_dst=hostDstTcpPort)
+            match = ofp_parser.OFPMatch(in_port=in_port,
+                                        ipv4_dst=self.virtual_ip,
+                                        eth_type=0x0800,
+                                        ip_proto=ipProto,
+                                        tcp_dst=hostDstTcpPort)
             actions = [ofp_parser.OFPActionSetField(ipv4_dst=server_ip),
                        ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                        ofp_parser.OFPActionOutput(self.ip_to_port[server_ip])]
@@ -520,6 +524,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             # Generate reverse flow from server to host.
             match = self.create_match(ofp_parser, self.ip_to_port[server_ip], srcIp, 0x0800,
                                       ipv4_src=server_ip, ip_proto=ipProto)
+            match = ofp_parser.OFPMatch(in_port=self.ip_to_port[server_ip],
+                                        ipv4_dst=srcIp,
+                                        eth_type=0x0800,
+                                        ip_proto=ipProto,
+                                        ipv4_src=server_ip)
             actions = [ofp_parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                        ofp_parser.OFPActionOutput(in_port)]
             inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
