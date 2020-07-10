@@ -522,8 +522,6 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             self.logger.info("%s: Send new flow from host to server", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
             # Generate reverse flow from server to host.
-            match = self.create_match(ofp_parser, self.ip_to_port[server_ip], srcIp, 0x0800,
-                                      ipv4_src=server_ip, ip_proto=ipProto)
             match = ofp_parser.OFPMatch(in_port=self.ip_to_port[server_ip],
                                         ipv4_dst=srcIp,
                                         eth_type=0x0800,
