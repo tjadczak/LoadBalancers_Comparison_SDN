@@ -514,7 +514,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                        ofp_parser.OFPActionOutput(self.ip_to_port[server_ip])]
             inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
             mod = ofp_parser.OFPFlowMod(
-                datapath=datapath,
+                datapath=dp,
                 priority=priority,
                 match=match,
                 instructions=inst)
@@ -533,7 +533,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                        ofp_parser.OFPActionOutput(in_port)]
             inst = [ofp_parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
             mod = ofp_parser.OFPFlowMod(
-                datapath=datapath,
+                datapath=dp,
                 priority=priority,
                 match=match,
                 instructions=inst)
@@ -547,7 +547,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                        ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                        ofp_parser.OFPActionOutput(self.ip_to_port[server_ip])]
             out = ofp_parser.OFPPacketOut(
-                datapath=datapath,
+                datapath=dp,
                 buffer_id=ofp.OFP_NO_BUFFER,
                 in_port=in_port,
                 actions=actions,
