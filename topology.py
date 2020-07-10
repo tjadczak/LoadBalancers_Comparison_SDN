@@ -134,15 +134,19 @@ def main():
         server.waitOutput()
         server.sendCmd('python -m SimpleHTTPServer 5000 >/dev/null 2>&1&')
         server.waitOutput()
+        server.sendCmd('tcpdump -i {}-eth0 -n -e -w {}.pcap &'.format(server.name, server.name))
+        server.waitOutput()
         #server.sendCmd('nc -lk 5000 > /dev/null 2>&1&')
         #server.waitOutput()
-    '''for host in hosts:
-        host.sendCmd('iperf -s -p5000 -i1 > /dev/null 2>&1 &')
-        host.waitOutput()'''
+    for host in hosts:
+        #host.sendCmd('iperf -s -p5000 -i1 > /dev/null 2>&1 &')
+        #host.waitOutput()
+        host.sendCmd('tcpdump -i {}-eth0 -n -e -w {}.pcap &'.format(host.name, host.name))
+        host.waitOutput()
 
     print("*** TEST START ***")
     time.sleep(0.1)
-    print("*** OPENLOAD START ***")
+    '''print("*** OPENLOAD START ***")
     
     for host in hosts[:3]:
         host.sendCmd("openload -f {}_openload.csv 10.0.0.100:80 >> /dev/null 2>&1 &".format(host.name))
@@ -155,7 +159,7 @@ def main():
         host.sendCmd("while true; do wget 10.0.0.100:5000/file_{}MB -O /dev/null --timeout=0.2 --tries=1 --wait=0.1 >>/dev/null 2>&1; done &".format(random.choice(['1','3','5','7','9'])))
         #host.sendCmd("while true; do nc -N 10.0.0.100 5000 < file_{}MB > /dev/null 2>&1; done &".format(random.choice(['1','3','5','7','9'])))
         host.waitOutput()
-        
+    '''        
     '''for server in servers:
         server.sendCmd("while true; do iperf -c 10.0.0.$(( $RANDOM % 7 + 4)) -p5000 -t$(( $RANDOM % 8 + 6)) >> /dev/null 2>&1; done &")
         server.waitOutput()
@@ -167,9 +171,9 @@ def main():
         server.waitOutput()
         time.sleep(0.2)'''
 
-    #CLI(net)
-    time.sleep(200)
-    print("*** TEST STOP ***")
+    CLI(net)
+    #time.sleep(200)
+    #print("*** TEST STOP ***")
     net.stop()
     
     print("*** CSV TO XLSX CONVERTION ***")
