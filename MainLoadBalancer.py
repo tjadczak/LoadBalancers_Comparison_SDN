@@ -494,7 +494,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         ipProto = 0x06
         priority = 10
 
-        if srcIp == self.H11_ip or srcIp == self.H12_ip or self.H13_ip or srcIp == self.H14_ip:
+        if srcIp == self.H11_ip or srcIp == self.H12_ip or srcIp == self.H13_ip or srcIp == self.H14_ip:
             self.logger.warning(
                 "%s: Got IPv4 TCP Packet In from server, but flow should be already installed to handle this !",
                 datetime.datetime.now().strftime('%H:%M:%S.%f'))
