@@ -544,10 +544,11 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             actions = [ofp_parser.OFPActionSetField(ipv4_dst=server_ip),
                        ofp_parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                        ofp_parser.OFPActionOutput(self.ip_to_port[server_ip])]
+            match = ofp_parser.OFPMatch(in_port=in_port)
             out = ofp_parser.OFPPacketOut(
                 datapath=dp,
                 buffer_id=ofp.OFP_NO_BUFFER,
-                in_port=in_port,
+                match=match,
                 actions=actions,
                 data=data)
             dp.send_msg(out)
