@@ -359,6 +359,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # If the packet is an ARP packet, create new flow table
         # entries and send an ARP response.
         if etherFrame.ethertype == ether_types.ETH_TYPE_ARP:
+            self.logger.info("%s: Got Packet In: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+                             "ETH_TYPE_ARP")
             self.arp_response(dp, pkt, etherFrame, ofp_parser, ofp, in_port)
             return
         elif etherFrame.ethertype == ether_types.ETH_TYPE_IP and not self.buckets:
@@ -389,10 +391,10 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         # to the target host's IP.
         if dstIp != self.H11_ip and dstIp != self.H12_ip and dstIp != self.H13_ip and dstIp != self.H14_ip:
             srcMac = self.ip_to_mac[self.H11_ip]
-            # self.logger.info("%s: Sending ARP reply to HOST", datetime.datetime.now().strftime('%H:%M:%S.%f'))
+            self.logger.info("%s: Sending ARP reply to HOST", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         else:
             srcMac = self.ip_to_mac[srcIp]
-            # self.logger.info("%s: Sending ARP reply to SERVER", datetime.datetime.now().strftime('%H:%M:%S.%f'))
+            self.logger.info("%s: Sending ARP reply to SERVER", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
         e = ethernet.ethernet(dstMac, srcMac, ether_types.ETH_TYPE_ARP)
         a = arp.arp(1, 0x0800, 6, 4, 2, srcMac, srcIp, dstMac, dstIp)
@@ -412,7 +414,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             data=p.data
         )
         datapath.send_msg(out)  # Send out ARP reply
-        # self.logger.info("%s: ARP reply send", datetime.datetime.now().strftime('%H:%M:%S.%f'))
+        self.logger.info("%s: ARP reply send", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
     # Sets up the flow table in the switch to map IP addresses correctly.
     def add_flow(self, datapath, priority, match, actions, idle_timeout=None, hard_timeout=None):
