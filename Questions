@@ -24,14 +24,46 @@ Ruch:
    wget
 Serwery: 4
 Hosty: 3 openload 7 wget
+
+loadBalancingAlgorithm - zwraca server_ip
+buckets                - jeśli true tworzy group flowy
+                       - tylko jeśli false to tworzy two-way flowy sztywne
+elephantServers        - reguluje zwracany server_ip
+                       - reguluje send_group_mod i add_group_flows
+                       - jeśli większy od 0 uruchamia ElephantFlowMonitor
+
 Konfiguracje:
-    4 serwery na group buckets
+    4 serwery na group buckets:
+        elephantServers = 0
+        loadBalancingAlgorithm = 'roundRobin'
+        buckets = True
     3 serwery na group buckets + 1 serwer na elephant flows
+        elephantServers = 1
+        loadBalancingAlgorithm = 'roundRobin'
+        buckets = True
     2 serwery na group buckets + 2 serwery na elephant flows random/roundRobin/leastBandwidth
+        elephantServers = 2
+        loadBalancingAlgorithm = 'roundRobin' / 'random' / 'leastBandwidth'
+        buckets = True
     1 serwer na group buckets + 3 serwery na elephant flows random/roundRobin/leastBandwidth
+        elephantServers = 3
+        loadBalancingAlgorithm = 'roundRobin' / 'random' / 'leastBandwidth'
+        buckets = True
     4 serwery na sztywne przypisanie do danego serwera flowu host-serwer random/roundRobin/leastBandwidth
+        elephantServers = 0
+        loadBalancingAlgorithm = 'roundRobin'
+        buckets = False
     3 serwery na sztywne przypisanie do danego serwera flowu host-serwer random/roundRobin/leastBandwidth + 1 serwer na elephant flows
+        elephantServers = 1
+        loadBalancingAlgorithm = 'roundRobin' / 'random' / 'leastBandwidth'
+        buckets = False
     2 serwery na sztywne przypisanie do danego serwera flowu host-serwer random/roundRobin/leastBandwidth + 2 serwery na elephant flows random/roundRobin/leastBandwidth
+        elephantServers = 2
+        loadBalancingAlgorithm = 'roundRobin' / 'random' / 'leastBandwidth'
+        buckets = False
     1 serwer na sztywne przypisanie do danego serwera flowu host-serwer random/roundRobin/leastBandwidth + 3 serwery na elephant flows random/roundRobin/leastBandwidth
+        elephantServers = 3
+        loadBalancingAlgorithm = 'roundRobin' / 'random' / 'leastBandwidth'
+        buckets = False
 
 

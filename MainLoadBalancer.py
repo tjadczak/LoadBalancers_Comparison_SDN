@@ -107,13 +107,14 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     priority = 20
     loadBalancingAlgorithm = 'random'  # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
     buckets = False
+    elephantServers = 1
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
         self.datapaths = {}
         self.elephant_flows = {}
         self.SendElephantFlowMonitor()
-        if self.loadBalancingAlgorithm != 'none':
+        if self.elephantServers > 0:
             self.elephant_thread = hub.spawn(self.ElephantFlowMonitor)
         self.monitor_thread = hub.spawn(self._monitor)
         self.tput_thread = hub.spawn(self.port_stats_monitor)
@@ -122,6 +123,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.logger.info("%s: Selected Load Balancing algorithm: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
                          self.loadBalancingAlgorithm)
         self.logger.info("%s: Using Bucket Group Table: %r", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.buckets)
+        self.logger.info("%s: Number of elephant servers: %d", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+                         self.elephantServers)
         self.logger.info("--------------------------------------------------------------")
         with open('server_output_throughput.csv', 'w') as f:
             pass
@@ -242,7 +245,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 self.logger.info("{}: Elephant flow ( 1Mbps ) detected {}".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f'), e['flowKey']))
 
-                server_ip = getServerIp(self.loadBalancingAlgorithm)
+                server_ip = getServerIp(self.loadBalancingAlgorithm, self.elephantServers)
 
                 self.logger.info("{}: Elephant flow redirecting to: {}".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f'), server_ip))
@@ -449,10 +452,20 @@ class SimpleLoadBalancer(app_manager.RyuApp):
 
         command_bucket_id = ofproto.OFPG_BUCKET_ALL
 
-        buckets = [parser.OFPBucket(bucket_id=1, actions=actions1, properties=None),
-                   parser.OFPBucket(bucket_id=2, actions=actions2, properties=None),
-                   parser.OFPBucket(bucket_id=3, actions=actions3, properties=None),
-                   parser.OFPBucket(bucket_id=4, actions=actions4, properties=None)]
+        if self.elephantServers == 0:
+            buckets = [parser.OFPBucket(bucket_id=1, actions=actions1, properties=None),
+                       parser.OFPBucket(bucket_id=2, actions=actions2, properties=None),
+                       parser.OFPBucket(bucket_id=3, actions=actions3, properties=None),
+                       parser.OFPBucket(bucket_id=4, actions=actions4, properties=None)]
+        elif self.elephantServers == 1:
+            buckets = [parser.OFPBucket(bucket_id=1, actions=actions1, properties=None),
+                       parser.OFPBucket(bucket_id=2, actions=actions2, properties=None),
+                       parser.OFPBucket(bucket_id=3, actions=actions3, properties=None)]
+        elif self.elephantServers == 2:
+            buckets = [parser.OFPBucket(bucket_id=1, actions=actions1, properties=None),
+                       parser.OFPBucket(bucket_id=2, actions=actions2, properties=None)]
+        elif self.elephantServers == 3:
+            buckets = [parser.OFPBucket(bucket_id=1, actions=actions1, properties=None)]
 
         req = parser.OFPGroupMod(datapath, ofproto.OFPGC_ADD,
                                  ofproto.OFPGT_SELECT, self.group_table_id, command_bucket_id, buckets)
@@ -467,15 +480,46 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             actions = [parser.OFPActionGroup(group_id=self.group_table_id)]
             self.add_flow(datapath, 10, match, actions)
 
-            for server in range(11, 15):
-                match = parser.OFPMatch(
-                    in_port=server,
-                    eth_type=ether_types.ETH_TYPE_IP,
-                    eth_dst=self.port_to_mac[host],
-                    ipv4_src=self.port_to_ip[server])
-                actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
-                           parser.OFPActionOutput(host)]
-                self.add_flow(datapath, 10, match, actions)
+            if self.elephantServers == 0:
+                for server in range(11, 15):
+                    match = parser.OFPMatch(
+                        in_port=server,
+                        eth_type=ether_types.ETH_TYPE_IP,
+                        eth_dst=self.port_to_mac[host],
+                        ipv4_src=self.port_to_ip[server])
+                    actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+                               parser.OFPActionOutput(host)]
+                    self.add_flow(datapath, 10, match, actions)
+            elif self.elephantServers == 1:
+                for server in range(11, 14):
+                    match = parser.OFPMatch(
+                        in_port=server,
+                        eth_type=ether_types.ETH_TYPE_IP,
+                        eth_dst=self.port_to_mac[host],
+                        ipv4_src=self.port_to_ip[server])
+                    actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+                               parser.OFPActionOutput(host)]
+                    self.add_flow(datapath, 10, match, actions)
+            elif self.elephantServers == 2:
+                for server in range(11, 13):
+                    match = parser.OFPMatch(
+                        in_port=server,
+                        eth_type=ether_types.ETH_TYPE_IP,
+                        eth_dst=self.port_to_mac[host],
+                        ipv4_src=self.port_to_ip[server])
+                    actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+                               parser.OFPActionOutput(host)]
+                    self.add_flow(datapath, 10, match, actions)
+            elif self.elephantServers == 1:
+                for server in range(11, 12):
+                    match = parser.OFPMatch(
+                        in_port=server,
+                        eth_type=ether_types.ETH_TYPE_IP,
+                        eth_dst=self.port_to_mac[host],
+                        ipv4_src=self.port_to_ip[server])
+                    actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
+                               parser.OFPActionOutput(host)]
+                    self.add_flow(datapath, 10, match, actions)
 
     def add_twoway_flow(self, msg):
         dp = msg.datapath
@@ -502,7 +546,14 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             return
 
         else:
-            server_ip = getServerIp(self.loadBalancingAlgorithm)
+            if self.elephantServers == 0:
+                server_ip = random.choice(["10.0.0.11", "10.0.0.12", "10.0.0.13", "10.0.0.14"])
+            elif self.elephantServers == 1:
+                server_ip = random.choice(["10.0.0.11", "10.0.0.12", "10.0.0.13"])
+            elif self.elephantServers == 2:
+                server_ip = random.choice(["10.0.0.11", "10.0.0.12"])
+            else:
+                server_ip = "10.0.0.11"
             # Generate flow from host to server.
             match = ofp_parser.OFPMatch(in_port=in_port,
                                         ipv4_dst=self.virtual_ip,
@@ -554,33 +605,72 @@ class SimpleLoadBalancer(app_manager.RyuApp):
             dp.send_msg(out)
             self.logger.info("%s: Send Packet Out to server", datetime.datetime.now().strftime('%H:%M:%S.%f'))
 
-previousServer = "10.0.0.11"
-def getServerIp(loadBalancingAlgorithm):
+previousServer = "10.0.0.14"
+def getServerIp(loadBalancingAlgorithm, elephantServers):
     global previousServer
 
+    if elephantServers == 1:
+        return  "10.0.0.14"
+
     if loadBalancingAlgorithm == 'random':
-        return random.choice(["10.0.0.11", "10.0.0.12", "10.0.0.13", "10.0.0.14"])
+        if elephantServers == 4:
+            return random.choice(["10.0.0.11", "10.0.0.12", "10.0.0.13", "10.0.0.14"])
+        elif elephantServers == 3:
+            return random.choice(["10.0.0.12", "10.0.0.13", "10.0.0.14"])
+        elif elephantServers == 2:
+            return random.choice(["10.0.0.13", "10.0.0.14"])
 
     elif loadBalancingAlgorithm == 'roundRobin':
-        if previousServer == "10.0.0.11":
-            previousServer = "10.0.0.12"
-            return "10.0.0.12"
-        elif previousServer == "10.0.0.12":
-            previousServer = "10.0.0.13"
-            return "10.0.0.13"
-        elif previousServer == "10.0.0.13":
-            previousServer = "10.0.0.14"
-            return "10.0.0.14"
-        else:
-            previousServer = "10.0.0.11"
-            return "10.0.0.11"
+        if elephantServers == 4:
+            if previousServer == "10.0.0.11":
+                previousServer = "10.0.0.12"
+                return "10.0.0.12"
+            elif previousServer == "10.0.0.12":
+                previousServer = "10.0.0.13"
+                return "10.0.0.13"
+            elif previousServer == "10.0.0.13":
+                previousServer = "10.0.0.14"
+                return "10.0.0.14"
+            else:
+                previousServer = "10.0.0.11"
+                return "10.0.0.11"
+        elif elephantServers == 3:
+            if previousServer == "10.0.0.12":
+                previousServer = "10.0.0.13"
+                return "10.0.0.13"
+            elif previousServer == "10.0.0.13":
+                previousServer = "10.0.0.14"
+                return "10.0.0.14"
+            else:
+                previousServer = "10.0.0.12"
+                return "10.0.0.12"
+        elif elephantServers == 2:
+            if previousServer == "10.0.0.13":
+                previousServer = "10.0.0.14"
+                return "10.0.0.14"
+            else:
+                previousServer = "10.0.0.13"
+                return "10.0.0.13"
 
     elif loadBalancingAlgorithm == 'leastBandwidth':
-        if self.throuhput[11:15].index(min(self.throuhput[11:15])) == 11:
-            return "10.0.0.11"
-        elif self.throuhput[11:15].index(min(self.throuhput[11:15])) == 12:
-            return "10.0.0.12"
-        elif self.throuhput[11:15].index(min(self.throuhput[11:15])) == 13:
-            return "10.0.0.13"
-        else:
-            return "10.0.0.14"
+        if elephantServers == 4:
+            if self.throuhput[11:15].index(min(self.throuhput[11:15])) == 11:
+                return "10.0.0.11"
+            elif self.throuhput[11:15].index(min(self.throuhput[11:15])) == 12:
+                return "10.0.0.12"
+            elif self.throuhput[11:15].index(min(self.throuhput[11:15])) == 13:
+                return "10.0.0.13"
+            else:
+                return "10.0.0.14"
+        elif elephantServers == 3:
+            if self.throuhput[12:15].index(min(self.throuhput[12:15])) == 12:
+                return "10.0.0.12"
+            elif self.throuhput[12:15].index(min(self.throuhput[12:15])) == 13:
+                return "10.0.0.13"
+            elif self.throuhput[12:15].index(min(self.throuhput[12:15])) == 14:
+                return "10.0.0.13"
+        elif elephantServers == 2:
+            if self.throuhput[13:15].index(min(self.throuhput[13:15])) == 13:
+                return "10.0.0.13"
+            elif self.throuhput[13:15].index(min(self.throuhput[13:15])) == 14:
+                return "10.0.0.14"
