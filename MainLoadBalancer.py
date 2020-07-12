@@ -133,7 +133,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
         self.logger.info("%s: STARTUP", datetime.datetime.now().strftime('%H:%M:%S.%f'))
         self.logger.info("%s: Selected Load Balancing algorithm: %s", datetime.datetime.now().strftime('%H:%M:%S.%f'),
                          self.loadBalancingAlgorithm)
-        self.logger.info("%s: Using Bucket Group Table: %r", datetime.datetime.now().strftime('%H:%M:%S.%f'), self.buckets)
+        self.logger.info("%s: Using Bucket Group Table: %r", datetime.datetime.now().strftime('%H:%M:%S.%f'),
+                         self.buckets)
         self.logger.info("%s: Number of elephant servers: %d", datetime.datetime.now().strftime('%H:%M:%S.%f'),
                          self.elephantServers)
         self.logger.info("--------------------------------------------------------------")
@@ -537,7 +538,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                     actions = [parser.OFPActionSetField(ipv4_src=self.virtual_ip),
                                parser.OFPActionOutput(host)]
                     self.add_flow(datapath, 10, match, actions)
-            elif self.elephantServers == 1:
+            elif self.elephantServers == 3:
                 for server in range(11, 12):
                     match = parser.OFPMatch(
                         in_port=server,
