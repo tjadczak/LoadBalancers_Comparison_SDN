@@ -12,6 +12,7 @@ from ryu.lib.packet import ipv4
 from ryu.lib.packet import arp
 from operator import attrgetter
 from ryu.lib import hub
+from ryu import cfg
 import datetime
 import requests
 import json
@@ -102,15 +103,25 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                   14: "10.0.0.14"}
     throuhput = [0] * 15  # in kbps
     rx_bytes = [0] * 15
-    idle_timeout = 3
-    hard_timeout = 10
+    idle_timeout = 10
+    hard_timeout = 20
     priority = 20
     loadBalancingAlgorithm = 'random'  # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
     buckets = False
-    elephantServers = 1
+    elephantServers = 3
 
     def __init__(self, *args, **kwargs):
         super(SimpleLoadBalancer, self).__init__(*args, **kwargs)
+        CONF = cfg.CONF
+        CONF.register_opts([
+            cfg.IntOpt('elephantServers', default=0),
+            cfg.StrOpt('loadBalancingAlgorithm', default='roundRobin'),
+            cfg.BoolOpt('buckets', default = False)])
+        
+        self.buckets = CONF.buckets
+        self.loadBalancingAlgorithm = CONF.loadBalancingAlgorithm
+        self.elephantServers = CONF.elephantServers
+        
         self.datapaths = {}
         self.elephant_flows = {}
         self.SendElephantFlowMonitor()
