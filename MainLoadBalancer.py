@@ -318,14 +318,30 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                 actions = [parser.OFPActionSetField(ipv4_dst=server_ip),
                            parser.OFPActionSetField(eth_dst=self.ip_to_mac[server_ip]),
                            parser.OFPActionOutput(self.ip_to_port[server_ip])]
-                self.add_flow(datapath, self.priority, match1, actions, idle_timeout=self.idle_timeout,
-                              hard_timeout=self.hard_timeout)
-                self.add_flow(datapath, self.priority, match2, actions, idle_timeout=self.idle_timeout,
-                              hard_timeout=self.hard_timeout)
-                self.add_flow(datapath, self.priority, match3, actions, idle_timeout=self.idle_timeout,
-                              hard_timeout=self.hard_timeout)
-                self.add_flow(datapath, self.priority, match4, actions, idle_timeout=self.idle_timeout,
-                              hard_timeout=self.hard_timeout)
+                if self.elephantServers == 4:
+                    self.add_flow(datapath, self.priority, match1, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
+                    self.add_flow(datapath, self.priority, match2, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
+                    self.add_flow(datapath, self.priority, match3, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
+                    self.add_flow(datapath, self.priority, match4, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
+                elif self.elephantServers == 3:
+                    self.add_flow(datapath, self.priority, match2, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
+                    self.add_flow(datapath, self.priority, match3, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
+                    self.add_flow(datapath, self.priority, match4, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
+                elif self.elephantServers == 2:
+                    self.add_flow(datapath, self.priority, match3, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
+                    self.add_flow(datapath, self.priority, match4, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
+                elif self.elephantServers == 1:
+                    self.add_flow(datapath, self.priority, match4, actions, idle_timeout=self.idle_timeout,
+                                  hard_timeout=self.hard_timeout)
 
                 self.logger.info("{}: Instaled new flows for elephant flow".format(
                     datetime.datetime.now().strftime('%H:%M:%S.%f')))
