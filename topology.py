@@ -156,7 +156,7 @@ def main():
     for host in hosts[4:]:
         #host.sendCmd("while true; do curl 10.0.0.100:5000/file_{}MB --output /dev/null --connect-timeout 2 --max-time 15 >> {}_curl.log 2>&1; done &".format(
             #random.choice(['1','3','5','7','9']), host.name))
-        host.sendCmd("while true; do wget 10.0.0.100:5000/file_{}MB -O /dev/null --timeout=0.2 --tries=1 --wait=0.1 >>/dev/null 2>&1; done &".format(random.choice(['1','3','5','7','9'])))
+        host.sendCmd("while true; do wget 10.0.0.100:5000/file_{}MB -O /dev/null --timeout=1 --tries=2 --wait=1 >>/dev/null 2>&1; done &".format(random.choice(['1','3','5','7','9'])))
         #host.sendCmd("while true; do nc -N 10.0.0.100 5000 < file_{}MB > /dev/null 2>&1; done &".format(random.choice(['1','3','5','7','9'])))
         host.waitOutput()
             
