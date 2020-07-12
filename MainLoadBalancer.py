@@ -104,7 +104,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
     throuhput = [0] * 15  # in kbps
     rx_bytes = [0] * 15
     idle_timeout = 10
-    hard_timeout = 20
+    hard_timeout = 40
     priority = 20
     loadBalancingAlgorithm = 'random'  # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
     buckets = False
