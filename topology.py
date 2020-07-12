@@ -185,7 +185,7 @@ def main():
             for row in csv.reader(f):
                 ws.append(row)
 
-    wb.save('results_{}_{}_{}_{}.xlsx'.format(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4]))
+    wb.save('results_{}.xlsx'.format(sys.argv[1]))
     
     print("*** DONE ***")
     #CLI(net)
