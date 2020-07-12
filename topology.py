@@ -149,7 +149,7 @@ def main():
     print("*** OPENLOAD START ***")
     
     for host in hosts[:3]:
-        host.sendCmd("openload -f {}_openload.csv 10.0.0.100:80 >> /dev/null 2>&1 &".format(host.name))
+        host.sendCmd("while true; do openload -f {}_openload.csv 10.0.0.100:80 >> /dev/null 2>&1; done &".format(host.name))
         host.waitOutput()
     
     print("*** file transfer START ***")

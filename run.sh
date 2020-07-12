@@ -15,5 +15,6 @@ do
     mininet_PID=$!
     sleep 215
     kill $minined_PID $ryu_PID $sflow_PID
+    rm *csv wget*
   done
 done
