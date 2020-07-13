@@ -134,6 +134,8 @@ def main():
         server.waitOutput()
         server.sendCmd('python -m SimpleHTTPServer 5000 >/dev/null 2>&1&')
         server.waitOutput()
+        server.sendCmd('python -m SimpleHTTPServer 6000 >/dev/null 2>&1&')
+        server.waitOutput()
         #server.sendCmd('tcpdump -i {}-eth0 -n -e -w {}.pcap &'.format(server.name, server.name))
         #server.waitOutput()
         #server.sendCmd('nc -lk 5000 > /dev/null 2>&1&')
@@ -156,7 +158,9 @@ def main():
     for host in hosts[4:]:
         #host.sendCmd("while true; do curl 10.0.0.100:5000/file_{}MB --output /dev/null --connect-timeout 2 --max-time 15 >> {}_curl.log 2>&1; done &".format(
             #random.choice(['1','3','5','7','9']), host.name))
-        host.sendCmd("while true; do wget 10.0.0.100:5000/file_{}MB -O /dev/null --timeout=1 --tries=2 --wait=1 >>/dev/null 2>&1; done &".format(random.choice(['1','3','5','7','9'])))
+        host.sendCmd("while true; do wget 10.0.0.100:5000/file_{}MB -O /dev/null --timeout=0.2 --tries=1 --wait=0.1 >>/dev/null 2>&1; done &".format(random.choice(['1','3','5','7','9'])))
+        host.waitOutput()
+        host.sendCmd("while true; do wget 10.0.0.100:6000/file_{}MB -O /dev/null --timeout=0.2 --tries=1 --wait=0.1 >>/dev/null 2>&1; done &".format(random.choice(['1','3','5','7','9'])))
         #host.sendCmd("while true; do nc -N 10.0.0.100 5000 < file_{}MB > /dev/null 2>&1; done &".format(random.choice(['1','3','5','7','9'])))
         host.waitOutput()
             
@@ -172,7 +176,7 @@ def main():
         time.sleep(0.2)'''
 
     #CLI(net)
-    time.sleep(200)
+    time.sleep(20)
     print("*** TEST STOP ***")
     net.stop()
     
@@ -184,6 +188,7 @@ def main():
         with open(filename, 'r') as f:
             for row in csv.reader(f):
                 ws.append(row)
+            ws.delete_rows(ws.min_row, 1)
 
     wb.save('results_{}_{}.xlsx'.format(sys.argv[1],sys.argv[2]))
     

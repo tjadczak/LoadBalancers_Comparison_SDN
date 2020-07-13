@@ -247,8 +247,8 @@ int main(int argc, char* argv[])
 					if(i < argc)
 					{
 						g_fileName = argv[i];
-						g_fp = fopen(g_fileName,"w");
-						fclose(g_fp);
+						//g_fp = fopen(g_fileName,"w");
+						//fclose(g_fp);
 					}
 					break;
                 case 'v':

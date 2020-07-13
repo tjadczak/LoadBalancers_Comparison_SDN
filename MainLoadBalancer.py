@@ -103,8 +103,8 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                   14: "10.0.0.14"}
     throuhput = [0] * 15  # in kbps
     rx_bytes = [0] * 15
-    idle_timeout = 10
-    hard_timeout = 40
+    idle_timeout = 3
+    hard_timeout = 30
     priority = 20
     loadBalancingAlgorithm = 'random'  # 'random' / 'roundRobin' / 'leastBandwidth' / 'none'
     buckets = False
@@ -216,7 +216,7 @@ class SimpleLoadBalancer(app_manager.RyuApp):
                    'value': 'bytes'}
         requests.put(self.rt + '/flow/pair/json', data=json.dumps(flowTcp))
 
-        threshold = {'metric': 'pair', 'value': 100000 / 8 * 5, 'byFlow': True, 'timeout': 1}
+        threshold = {'metric': 'pair', 'value': 100000 / 8 * 2, 'byFlow': True, 'timeout': 1}
         requests.put(self.rt + '/threshold/elephant/json', data=json.dumps(threshold))
 
     def ElephantFlowMonitor(self):
