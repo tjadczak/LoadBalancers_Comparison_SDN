@@ -13,7 +13,7 @@ do
     sleep 2
     /home/mininet/LoadBalancers_Comparison_SDN/topology.py $x $i > /dev/null 2>&1 &
     mininet_PID=$!
-    sleep 25
+    sleep 30
     kill $minined_PID $ryu_PID $sflow_PID
     rm *csv wget*
   done

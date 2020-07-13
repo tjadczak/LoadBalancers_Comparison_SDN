@@ -176,20 +176,33 @@ def main():
         time.sleep(0.2)'''
 
     #CLI(net)
-    time.sleep(20)
+    time.sleep(25)
     print("*** TEST STOP ***")
     net.stop()
     
     print("*** CSV TO XLSX CONVERTION ***")
     wb = Workbook()
-    for filename in fnmatch.filter(os.listdir('.'), '*.csv'):
-        ws = wb.create_sheet(filename)
-        wb.active = ws
-        with open(filename, 'r') as f:
-            for row in csv.reader(f):
-                ws.append(row)
-            ws.delete_rows(ws.min_row, 1)
-
+    ws = wb.active
+    with open('h1_openload.csv', 'r') as f:
+        for row_idx, row in enumerate(csv.reader(f)):
+            #print("row idx:", row_idx)
+            for cell_idx, cell_value in enumerate(row):
+            #    print("cell idx:", cell_idx)
+                ws.cell(row=row_idx+1, column=2+cell_idx, value=cell_value)
+    with open('h2_openload.csv', 'r') as f:
+        for row_idx, row in enumerate(csv.reader(f)):
+            for cell_idx, cell_value in enumerate(row):
+                ws.cell(row=row_idx+1, column=4+cell_idx, value=cell_value)
+    with open('h3_openload.csv', 'r') as f:
+        for row_idx, row in enumerate(csv.reader(f)):
+            for cell_idx, cell_value in enumerate(row):
+                ws.cell(row=row_idx+1, column=6+cell_idx, value=cell_value)
+    with open('server_output_throughput.csv', 'r') as f:
+        for row_idx, row in enumerate(csv.reader(f)):
+            for cell_idx, cell_value in enumerate(row):
+                ws.cell(row=row_idx+1, column=8+cell_idx, value=cell_value)
+    
+    ws.delete_rows(ws.min_row, 1)
     wb.save('results_{}_{}.xlsx'.format(sys.argv[1],sys.argv[2]))
     
     print("*** DONE ***")
