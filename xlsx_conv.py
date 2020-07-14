@@ -1,73 +1,67 @@
 #!/usr/bin/python3.7
-import os, sys, fnmatch
-import signal
+import os, fnmatch
 import re
 import fcntl
 import array
-import struct
-import sys
 import time
 import random
 import csv
 from openpyxl import Workbook
 from openpyxl import load_workbook
-import xlcalculator
 
 print("*** XLSX MAGIC ***")
-'''for filename in fnmatch.filter(os.listdir('.'), '*.xlsx'):
+for filename in fnmatch.filter(os.listdir('.'), 'results*.xlsx'):
     results = load_workbook(filename)
     results_sheet = results.active
-    for row in range(1,30):
-        for column in range(1,12):
+    for column in range(1,12):
+        values=[]
+        for row in range(1,30):
             current_value = results_sheet.cell(row=row, column=column).value
             if current_value:
                 results_sheet.cell(row=row, column=column, value=float(current_value))
-    results_sheet.cell(row=32, column=2, value="=AVERAGE(B1:B30)")
-    results_sheet.cell(row=32, column=3, value="=AVERAGE(C1:C30)")
-    results_sheet.cell(row=32, column=4, value="=AVERAGE(D1:D30)")
-    results_sheet.cell(row=32, column=5, value="=AVERAGE(E1:E30)")
-    results_sheet.cell(row=32, column=6, value="=AVERAGE(F1:F30)")
-    results_sheet.cell(row=32, column=7, value="=AVERAGE(G1:G30)")
-    results_sheet.cell(row=32, column=8, value="=AVERAGE(H1:H30)")
-    results_sheet.cell(row=32, column=9, value="=AVERAGE(I1:I30)")
-    results_sheet.cell(row=32, column=10, value="=AVERAGE(J1:J30)")
-    results_sheet.cell(row=32, column=11, value="=AVERAGE(K1:K30)")
+                values.append(float(current_value))
+        if values:
+            results_sheet.cell(row=32, column=column, value=sum(values)/len(values))
+        else:
+            results_sheet.cell(row=32, column=column, value=0)
 
-    results_sheet.cell(row=35, column=2, value="=SUM(B32,D32,F32)")
-    results_sheet.cell(row=35, column=3, value="=AVERAGE(C32,E32,G32)")
-    results_sheet.cell(row=35, column=4, value="=SUM(H32:K32)")
+    results_sheet.cell(row=35, column=2, value=sum([results_sheet['B32'].value, results_sheet['D32'].value, results_sheet['F32'].value]))
+    results_sheet.cell(row=35, column=3, value=sum([results_sheet['C32'].value, results_sheet['E32'].value, results_sheet['G32'].value])/3.0)
+    results_sheet.cell(row=35, column=4, value=sum([results_sheet['H32'].value, results_sheet['I32'].value, results_sheet['J32'].value, results_sheet['K32'].value]))
 
-    results.save(filename)'''
+    results.save(filename)
+
+dict = {'false_0_roundRobin':2, 'false_1_roundRobin':5,
+        'false_2_roundRobin':8, 'false_3_roundRobin':11,
+        'false_2_random':14, 'false_3_random':17,
+        'false_2_leastBandwidth':20, 'false_3_leastBandwidth':23,
+        'true_0_roundRobin':26, 'true_1_roundRobin':29,
+        'true_2_roundRobin':32, 'true_3_roundRobin':35,
+        'true_2_random':38, 'true_3_random':41,
+        'true_2_leastBandwidth':44, 'true_3_leastBandwidth':47}
 
 main_filename = "Magisterka_dane.xlsx"
 main_wb = load_workbook(main_filename)
-main_sheet = main_wb.get_sheet_by_name("Results")
+main_sheet = main_wb["Results"]
 
-files = fnmatch.filter(os.listdir('.'), 'results_params_true_3_random.conf*')
-for filename in files:
-    num = int(re.findall(r"(\d+).xlsx", filename)[0])
-    #results_wb = load_workbook(filename)
-    #results_wb = load_workbook(filename, data_only=True, read_only=True)
-    #results_sheet = results_wb.active
-    results_wb=xw.Book(filename)
+for pattern in dict:
+    files = fnmatch.filter(os.listdir('.'), '*'+pattern+'*xlsx')
+    for filename in files:
+        num = int(re.findall(r"(\d+).xlsx", filename)[0])
+        results_wb = load_workbook(filename)
+        results_wb = load_workbook(filename, data_only=True, read_only=True)
+        results_sheet = results_wb.active
 
-    #a = results_sheet.cell(row=35, column=2).internal_value
-    a = results_wb.sheets['Sheet'].cell(row=35, column=2).value
-    b = results_wb.sheets['Sheet'].cell(row=35, column=3).value
-    c = results_wb.sheets['Sheet'].cell(row=35, column=4).value
-    #b = results_sheet.cell(row=35, column=3).value
-    #c = results_sheet.cell(row=35, column=4).value
-    print(a,b,c)
-    main_sheet.cell(row=2+num, column=40, value=a)
-    main_sheet.cell(row=2+num, column=41, value=b)
-    main_sheet.cell(row=2+num, column=42, value=c)
-    results_wb.close()
+        a = results_sheet.cell(row=35, column=2).value
+        b = results_sheet.cell(row=35, column=3).value
+        c = results_sheet.cell(row=35, column=4).value
+    
+        main_sheet.cell(row=2+num, column=dict[pattern], value=a)
+        main_sheet.cell(row=2+num, column=dict[pattern]+1, value=b)
+        main_sheet.cell(row=2+num, column=dict[pattern]+2, value=c)
+        results_wb.close()
     
 main_wb.save(main_filename)
-    
-
-
-
 print("*** DONE ***")
 
 
